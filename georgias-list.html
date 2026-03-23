@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Georgia's List</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Natural blues and greens palette */
+  --ink: #1C2B2B;
+  --slate: #4A6670;
+  --mist: #8FAAB0;
+  --fog: #C5D8DC;
+  --offwhite: #F2F7F5;
+  --surface: #FAFCFB;
+  --border: rgba(28,43,43,0.10);
+  --border-strong: rgba(28,43,43,0.18);
+  --text: var(--ink);
+  --text-muted: var(--slate);
+  --text-faint: var(--mist);
+
+  /* Column colours — natural, earthy */
+  --col-backlog-bg: #C8DFD5;
+  --col-watching-bg: #D6EAF0;
+  --col-watched-bg: #B8D4C8;
+
+  /* Category colours */
+  --cat-film: #2E7D6B;
+  --cat-film-bg: rgba(46,125,107,0.10);
+  --cat-tv: #1A6B8A;
+  --cat-tv-bg: rgba(26,107,138,0.10);
+  --cat-book: #4A7C59;
+  --cat-book-bg: rgba(74,124,89,0.10);
+  --cat-other: #2B6080;
+  --cat-other-bg: rgba(43,96,128,0.10);
+
+  /* Priority dots */
+  --p1: #2E7D6B;
+  --p2: #1A6B8A;
+  --p3: #8FAAB0;
+
+  /* Accent */
+  --accent: #2E7D6B;
+  --accent-hover: #235F52;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --nav-h: 58px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'DM Sans', sans-serif; background: var(--offwhite); color: var(--text); font-size: 14px; overflow: hidden; }
+
+/* ── NAV ── */
+nav {
+  height: var(--nav-h);
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 0;
+  position: relative;
+  z-index: 100;
+}
+.nav-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--offwhite);
+  margin-right: 36px;
+  flex-shrink: 0;
+}
+.nav-title span { color: #6EC4A7; }
+.nav-tabs { display: flex; gap: 2px; }
+.nav-tab {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(242,247,245,0.5);
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+}
+.nav-tab:hover { color: var(--offwhite); background: rgba(255,255,255,0.07); }
+.nav-tab.active { color: var(--ink); background: var(--offwhite); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.add-btn {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-btn:hover { background: var(--accent-hover); }
+.add-btn::before { content: '+'; font-size: 16px; font-weight: 300; line-height: 1; }
+
+/* ── PAGES ── */
+.page { display: none; overflow: hidden; flex-direction: column; }
+.page.active { display: flex; flex-direction: column; overflow: hidden; height: calc(100vh - var(--nav-h)); }
+
+/* ── BOARD CONTROLS ── */
+.board-controls {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.filter-label { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-faint); margin-right: 4px; }
+.filter-btn {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+.filter-btn.active[data-cat="all"] { background: var(--ink); color: var(--offwhite); border-color: var(--ink); }
+.filter-btn.active[data-cat="Film"] { background: var(--cat-film); color: #fff; border-color: var(--cat-film); }
+.filter-btn.active[data-cat="TV"] { background: var(--cat-tv); color: #fff; border-color: var(--cat-tv); }
+.filter-btn.active[data-cat="Book"] { background: var(--cat-book); color: #fff; border-color: var(--cat-book); }
+.filter-btn.active[data-cat="Other"] { background: var(--cat-other); color: #fff; border-color: var(--cat-other); }
+.stats-strip { margin-left: auto; display: flex; gap: 14px; font-size: 12px; color: var(--text-faint); flex-wrap: wrap; }
+.stat-item { display: flex; align-items: center; gap: 5px; }
+.stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── BOARD ── */
+.board { display: grid; grid-template-columns: repeat(3, 1fr); flex: 1; min-height: 0; overflow: hidden; }
+.column { display: flex; flex-direction: column; border-right: 1px solid var(--border); min-height: 0; overflow: hidden; }
+.column:last-child { border-right: none; }
+.col-header {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.col-header[data-col="backlog"] { background: #A8CCBF; }
+.col-header[data-col="watching"] { background: #A8C8D8; }
+.col-header[data-col="watched"] { background: #7DBAAA; }
+.col-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.75;
+}
+.col-count { font-size: 11px; color: var(--ink); opacity: 0.5; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 10px; font-family: 'League Spartan', sans-serif; font-weight: 500; }
+.col-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.col-body::-webkit-scrollbar { width: 3px; }
+.col-body::-webkit-scrollbar-track { background: transparent; }
+.col-body::-webkit-scrollbar-thumb { background: var(--fog); border-radius: 2px; }
+.col-body[data-col="backlog"] { background: var(--col-backlog-bg); }
+.col-body[data-col="watching"] { background: var(--col-watching-bg); }
+.col-body[data-col="watched"] { background: var(--col-watched-bg); }
+.col-body.drag-over { outline: 2px dashed var(--accent); outline-offset: -4px; border-radius: 6px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px 12px 17px;
+  cursor: grab;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  flex-shrink: 0;
+}
+.card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.card.p1::before { background: var(--p1); }
+.card.p2::before { background: var(--p2); }
+.card.p3::before { background: var(--p3); }
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.09); transform: translateY(-1px); }
+.card:hover .card-actions { opacity: 1; }
+.card.dragging { opacity: 0.4; transform: rotate(1deg) scale(1.02); box-shadow: var(--shadow-lg); cursor: grabbing; }
+.card.hidden { display: none; }
+
+.card-actions {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.card-action-btn {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  line-height: 1;
+}
+.card-action-btn:hover { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.card-action-btn.delete:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+.card-title { font-family: 'League Spartan', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.35; letter-spacing: -0.01em; }
+.cat-pill { font-family: 'League Spartan', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.cat-Film { background: var(--cat-film-bg); color: var(--cat-film); }
+.cat-TV { background: var(--cat-tv-bg); color: var(--cat-tv); }
+.cat-Book { background: var(--cat-book-bg); color: var(--cat-book); }
+.cat-Other { background: var(--cat-other-bg); color: var(--cat-other); }
+.card-meta { font-size: 12px; color: var(--text-faint); margin-bottom: 5px; }
+.card-note { display: block; font-size: 12px; color: var(--text-muted); line-height: 1.5; font-style: italic; }
+.card-rating { margin-top: 6px; }
+.card-thoughts { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 5px; line-height: 1.4; border-left: 2px solid var(--border-strong); padding-left: 8px; }
+.rating-badge { display: inline-flex; align-items: center; gap: 3px; font-family: 'League Spartan', sans-serif; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: rgba(46,125,107,0.12); color: var(--cat-film); }
+
+.drop-placeholder { height: 56px; border: 2px dashed var(--accent); border-radius: var(--radius); background: rgba(46,125,107,0.05); flex-shrink: 0; }
+
+/* ── HISTORY ── */
+#page-history { overflow-y: auto; padding: 32px 36px; background: var(--offwhite); }
+.history-header { margin-bottom: 32px; }
+.history-header h2 { font-family: 'League Spartan', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin-bottom: 4px; }
+.history-header p { font-size: 13px; color: var(--text-muted); }
+.year-section { margin-bottom: 40px; }
+.year-label { font-family: 'League Spartan', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.year-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.months-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.month-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.month-card-header { background: var(--ink); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; }
+.month-name { font-family: 'League Spartan', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--offwhite); }
+.month-count { font-size: 10px; color: rgba(242,247,245,0.5); font-family: 'League Spartan', sans-serif; }
+.month-items { padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.month-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 6px; border-radius: 6px; }
+.month-item:hover { background: rgba(0,0,0,0.03); }
+.month-item-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.month-item-text { font-size: 12px; color: var(--text); line-height: 1.35; }
+.month-item-meta { font-size: 10px; color: var(--text-faint); margin-top: 1px; }
+.month-item-thoughts { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 3px; line-height: 1.4; }
+.history-empty { text-align: center; padding: 60px 20px; color: var(--text-faint); }
+.history-empty h3 { font-family: 'League Spartan', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+.history-empty p { font-size: 13px; }
+
+/* ── STARS ── */
+.star { width: 32px; height: 32px; border-radius: 4px; border: 1.5px solid var(--border-strong); background: transparent; font-size: 11px; font-family: 'League Spartan', sans-serif; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.1s; display: flex; align-items: center; justify-content: center; }
+.star:hover, .star.lit { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── MODALS ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(28,43,43,0.55); z-index: 999; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); width: 460px; max-width: calc(100vw - 40px); box-shadow: var(--shadow-lg); overflow: hidden; }
+.modal-header { background: var(--ink); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-family: 'League Spartan', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--offwhite); }
+.modal-close { background: none; border: none; color: rgba(242,247,245,0.6); font-size: 20px; cursor: pointer; line-height: 1; padding: 0 2px; transition: color 0.15s; }
+.modal-close:hover { color: var(--offwhite); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-family: 'League Spartan', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.form-input, .form-select, .form-textarea { font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); background: var(--offwhite); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 9px 12px; outline: none; transition: border-color 0.15s; width: 100%; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+.form-select { cursor: pointer; }
+
+.cat-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+.cat-option { flex: 1; min-width: 60px; padding: 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: transparent; font-family: 'League Spartan', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; color: var(--text-muted); text-align: center; }
+.cat-option[data-val="Film"]:hover, .cat-option[data-val="Film"].selected { background: var(--cat-film-bg); border-color: var(--cat-film); color: var(--cat-film); }
+.cat-option[data-val="TV"]:hover, .cat-option[data-val="TV"].selected { background: var(--cat-tv-bg); border-color: var(--cat-tv); color: var(--cat-tv); }
+.cat-option[data-val="Book"]:hover, .cat-option[data-val="Book"].selected { background: var(--cat-book-bg); border-color: var(--cat-book); color: var(--cat-book); }
+.cat-option[data-val="Other"]:hover, .cat-option[data-val="Other"].selected { background: var(--cat-other-bg); border-color: var(--cat-other); color: var(--cat-other); }
+
+.priority-picker { display: flex; gap: 6px; }
+.pri-option { flex: 1; padding: 7px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: transparent; font-family: 'League Spartan', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; color: var(--text-faint); text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.pri-option::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pri-option[data-val="1"]::before { background: var(--p1); }
+.pri-option[data-val="2"]::before { background: var(--p2); }
+.pri-option[data-val="3"]::before { background: var(--p3); }
+.pri-option[data-val="1"].selected { border-color: var(--p1); color: var(--p1); background: rgba(46,125,107,0.07); }
+.pri-option[data-val="2"].selected { border-color: var(--p2); color: var(--p2); background: rgba(26,107,138,0.07); }
+.pri-option[data-val="3"].selected { border-color: var(--p3); color: var(--slate); background: rgba(0,0,0,0.04); }
+
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.btn-cancel { font-family: 'League Spartan', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 18px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+.btn-cancel:hover { background: rgba(0,0,0,0.04); }
+.btn-submit { font-family: 'League Spartan', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 20px; border-radius: 4px; border: none; background: var(--accent); color: #fff; cursor: pointer; transition: background 0.15s; }
+.btn-submit:hover { background: var(--accent-hover); }
+
+.thoughts-prompt { font-size: 12px; color: var(--text-muted); font-style: italic; margin-bottom: 4px; line-height: 1.5; }
+
+@media (max-width: 800px) {
+  body { overflow: auto; }
+  html, body { height: auto; min-height: 100%; }
+
+  nav { padding: 0 16px; height: auto; min-height: var(--nav-h); flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+  .nav-title { font-size: 15px; margin-right: 0; }
+  .nav-tabs { gap: 2px; }
+  .nav-tab { padding: 6px 12px; font-size: 10px; }
+  .add-btn { padding: 7px 14px; font-size: 10px; }
+
+  .page { display: none; height: auto; overflow: visible; min-height: 0; }
+  .page.active { display: block; overflow: visible; height: auto; }
+
+  .board-controls { padding: 8px 14px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .filter-btn { flex-shrink: 0; }
+  .stats-strip { display: none; }
+
+  .board { display: block; height: auto; overflow: visible; }
+  .column { border-right: none; border-bottom: 3px solid var(--border); overflow: visible; height: auto; }
+  .column:last-child { border-bottom: none; }
+  .col-body { height: auto; max-height: none; overflow: visible; min-height: 80px; padding: 10px; }
+
+  .modal { width: calc(100vw - 24px); max-height: 88vh; overflow-y: auto; }
+  .modal-body { padding: 14px; gap: 12px; }
+  .modal-footer { padding: 12px 14px; }
+
+  #page-history { padding: 16px; overflow: visible; height: auto; }
+  .months-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-title">Georgia's <span>List</span></span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="board">Board</button>
+    <button class="nav-tab" data-page="history">History</button>
+  </div>
+  <div class="nav-right">
+    <button class="add-btn" id="openAdd">Add</button>
+  </div>
+</nav>
+
+<!-- BOARD PAGE -->
+<div class="page active" id="page-board">
+  <div class="board-controls">
+    <span class="filter-label">Show</span>
+    <button class="filter-btn active" data-cat="all">All</button>
+    <button class="filter-btn" data-cat="Film">Films</button>
+    <button class="filter-btn" data-cat="TV">TV</button>
+    <button class="filter-btn" data-cat="Book">Books</button>
+    <button class="filter-btn" data-cat="Other">Other</button>
+    <div class="stats-strip" id="statsStrip"></div>
+  </div>
+  <div class="board">
+    <div class="column">
+      <div class="col-header" data-col="backlog">
+        <span class="col-title">Want to Watch / Read</span>
+        <span class="col-count" id="count-backlog">0</span>
+      </div>
+      <div class="col-body" id="col-backlog" data-col="backlog"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="watching">
+        <span class="col-title">Currently Watching / Reading</span>
+        <span class="col-count" id="count-watching">0</span>
+      </div>
+      <div class="col-body" id="col-watching" data-col="watching"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="watched">
+        <span class="col-title">Watched / Read</span>
+        <span class="col-count" id="count-watched">0</span>
+      </div>
+      <div class="col-body" id="col-watched" data-col="watched"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div class="history-header">
+    <h2>History</h2>
+    <p>Everything watched and read, by month.</p>
+  </div>
+  <div id="historyContent"></div>
+</div>
+
+<!-- RATING MODAL -->
+<div class="modal-overlay" id="ratingOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Log it</span>
+      <button class="modal-close" id="closeRating">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="ratingItemTitle" style="font-family:'League Spartan',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
+      <div id="ratingItemMeta" style="font-size:12px;color:var(--text-faint);margin-bottom:20px;"></div>
+
+      <div class="form-group">
+        <label class="form-label">When did you watch / read it?</label>
+        <div style="display:flex;gap:8px;">
+          <select class="form-select" id="ratingMonth" style="flex:2;">
+            <option value="">Month</option>
+            <option value="0">January</option><option value="1">February</option>
+            <option value="2">March</option><option value="3">April</option>
+            <option value="4">May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option>
+            <option value="8">September</option><option value="9">October</option>
+            <option value="10">November</option><option value="11">December</option>
+          </select>
+          <select class="form-select" id="ratingYear" style="flex:1;"></select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your rating</label>
+        <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;" id="starRow"></div>
+        <div style="font-size:13px;color:var(--text-muted);" id="ratingReadout">Not rated</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your thoughts</label>
+        <p class="thoughts-prompt" id="thoughtsPrompt"></p>
+        <textarea class="form-textarea" id="thoughtsInput" placeholder="Write whatever comes to mind…" style="min-height:90px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="skipRating">Skip</button>
+      <button class="btn-submit" id="submitRating">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit</span>
+      <button class="modal-close" id="closeEdit">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-input" id="editTitle">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Creator / Year</label>
+        <input type="text" class="form-input" id="editMeta">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-picker" id="editCatPicker">
+          <button class="cat-option" data-val="Film">Film</button>
+          <button class="cat-option" data-val="TV">TV</button>
+          <button class="cat-option" data-val="Book">Book</button>
+          <button class="cat-option" data-val="Other">Other</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <div class="priority-picker" id="editPriPicker">
+          <button class="pri-option" data-val="1">See First</button>
+          <button class="pri-option" data-val="2">See Soon</button>
+          <button class="pri-option" data-val="3">When Ready</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note</label>
+        <textarea class="form-textarea" id="editNote"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Thoughts</label>
+        <textarea class="form-textarea" id="editThoughts" style="min-height:80px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelEdit">Cancel</button>
+      <button class="btn-submit" id="submitEdit">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add to List</span>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-input" id="inputTitle" placeholder="e.g. The Bear, Intermezzo…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Creator / Year</label>
+        <input type="text" class="form-input" id="inputMeta" placeholder="e.g. Christopher Storer · 2022">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-picker">
+          <button class="cat-option selected" data-val="Film">Film</button>
+          <button class="cat-option" data-val="TV">TV</button>
+          <button class="cat-option" data-val="Book">Book</button>
+          <button class="cat-option" data-val="Other">Other</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <div class="priority-picker">
+          <button class="pri-option selected" data-val="1">See First</button>
+          <button class="pri-option" data-val="2">See Soon</button>
+          <button class="pri-option" data-val="3">When Ready</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <textarea class="form-textarea" id="inputNote" placeholder="Why it's on the list…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelModal">Cancel</button>
+      <button class="btn-submit" id="submitAdd">Add to List</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://qotnhrwksvilzmfqleat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvdG5ocndrc3ZpbHptZnFsZWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MDg0NTYsImV4cCI6MjA4OTQ4NDQ1Nn0.sZL-yI9HgqIcVHqCLwu8T23yLAFwVcw7w7CEBbyyl-Q';
+const TABLE = 'georgia_watchlist';
+
+const db = {
+  async get() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async upsert(row) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify(row)
+    });
+    if (!res.ok) throw new Error(await res.text());
+  }
+};
+
+// ── STATE ──
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let data = {};
+let activeFilter = 'all';
+let dragItem = null;
+let placeholder = null;
+let newCat = 'Film';
+let newPriority = 1;
+
+function allItems() { return Object.values(data); }
+
+// ── LOADING ──
+function showLoading(msg) {
+  let el = document.getElementById('loadingOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(242,247,245,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:League Spartan,sans-serif;';
+    el.innerHTML = `<div style="font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--slate);" id="loadingMsg"></div><div style="margin-top:12px;width:40px;height:2px;background:#2E7D6B;animation:lb 1s ease-in-out infinite alternate;"></div><style>@keyframes lb{from{transform:scaleX(0.2)}to{transform:scaleX(1)}}</style>`;
+    document.body.appendChild(el);
+  }
+  document.getElementById('loadingMsg').textContent = msg;
+  el.style.display = 'flex';
+}
+function hideLoading() { const el = document.getElementById('loadingOverlay'); if (el) el.style.display = 'none'; }
+function showError(msg) {
+  hideLoading();
+  let el = document.getElementById('errorBanner');
+  if (!el) { el = document.createElement('div'); el.id = 'errorBanner'; el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:6px;font-size:12px;z-index:9999;'; document.body.appendChild(el); }
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ── LOAD / SAVE ──
+async function loadData() {
+  showLoading('Loading…');
+  try {
+    const rows = await db.get();
+    data = {};
+    rows.forEach(r => {
+      data[r.id] = { id: r.id, col: r.col, cat: r.cat, title: r.title,
+        meta: r.meta || '', note: r.note || '', priority: r.priority || 1,
+        rating: r.rating || null, thoughts: r.thoughts || '',
+        custom: r.custom || false, doneAt: r.done_at || null };
+    });
+  } catch(e) { showError('Could not connect. Check your connection.'); }
+  hideLoading();
+}
+
+async function saveItem(id) {
+  const item = data[id];
+  if (!item) return;
+  try {
+    await db.upsert({ id: item.id, col: item.col, cat: item.cat, title: item.title,
+      meta: item.meta || '', note: item.note || '', priority: item.priority,
+      rating: item.rating || null, thoughts: item.thoughts || '',
+      custom: item.custom || false, done_at: item.doneAt || null });
+  } catch(e) { showError('Could not save. Check your connection.'); }
+}
+
+// ── RENDER BOARD ──
+function renderBoard() {
+  ['backlog','watching','watched'].forEach(col => { document.getElementById('col-' + col).innerHTML = ''; });
+  allItems().forEach(item => {
+    document.getElementById('col-' + item.col).appendChild(makeCard(item));
+  });
+  updateCounts();
+  updateStats();
+}
+
+function makeCard(item) {
+  const div = document.createElement('div');
+  div.className = `card p${item.priority}`;
+  div.dataset.id = item.id;
+  div.dataset.cat = item.cat;
+  div.draggable = true;
+  if (activeFilter !== 'all' && item.cat !== activeFilter) div.classList.add('hidden');
+  div.innerHTML = `
+    <div class="card-actions">
+      <button class="card-action-btn edit" title="Edit">✎</button>
+      <button class="card-action-btn delete" title="Delete">✕</button>
+    </div>
+    <div class="card-top">
+      <span class="card-title">${esc(item.title)}</span>
+      <span class="cat-pill cat-${item.cat}">${item.cat}</span>
+    </div>
+    <div class="card-meta">${esc(item.meta || '')}</div>
+    ${item.note ? `<div class="card-note">${esc(item.note)}</div>` : ''}
+    ${item.rating ? `<div class="card-rating"><div class="rating-badge">★ ${item.rating}/10</div></div>` : ''}
+    ${item.thoughts ? `<div class="card-thoughts">${esc(item.thoughts)}</div>` : ''}
+  `;
+  div.querySelector('.edit').addEventListener('click', e => { e.stopPropagation(); openEditModal(item.id); });
+  div.querySelector('.delete').addEventListener('click', e => { e.stopPropagation(); confirmDelete(item.id); });
+  div.addEventListener('dragstart', onDragStart);
+  div.addEventListener('dragend', onDragEnd);
+  return div;
+}
+
+function updateCounts() {
+  ['backlog','watching','watched'].forEach(col => {
+    document.getElementById('count-' + col).textContent =
+      document.querySelectorAll(`#col-${col} .card:not(.hidden)`).length;
+  });
+}
+
+function updateStats() {
+  const watched = allItems().filter(i => i.col === 'watched');
+  const total = allItems().length;
+  document.getElementById('statsStrip').innerHTML = `
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-film)"></span>${watched.filter(i=>i.cat==='Film').length} films</span>
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-tv)"></span>${watched.filter(i=>i.cat==='TV').length} TV</span>
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-book)"></span>${watched.filter(i=>i.cat==='Book').length} books</span>
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-other)"></span>${watched.filter(i=>i.cat==='Other').length} other</span>
+    <span class="stat-item" style="color:var(--text-faint)">${watched.length}/${total} done</span>
+  `;
+}
+
+// ── DRAG ──
+function onDragStart(e) {
+  dragItem = e.currentTarget; dragItem.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragItem.dataset.id);
+  placeholder = document.createElement('div');
+  placeholder.className = 'drop-placeholder';
+}
+function onDragEnd() {
+  if (dragItem) dragItem.classList.remove('dragging');
+  if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+  document.querySelectorAll('.col-body').forEach(c => c.classList.remove('drag-over'));
+  dragItem = null; placeholder = null;
+}
+
+function setupColumns() {
+  document.querySelectorAll('.col-body').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault(); col.classList.add('drag-over');
+      const after = getDragAfter(col, e.clientY);
+      if (placeholder) { after == null ? col.appendChild(placeholder) : col.insertBefore(placeholder, after); }
+    });
+    col.addEventListener('dragleave', e => {
+      if (!col.contains(e.relatedTarget)) {
+        col.classList.remove('drag-over');
+        if (placeholder && placeholder.parentNode === col) col.removeChild(placeholder);
+      }
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault(); col.classList.remove('drag-over');
+      if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+      const id = e.dataTransfer.getData('text/plain');
+      const newCol = col.dataset.col;
+      if (id && newCol && data[id]) {
+        const wasWatched = data[id].col === 'watched';
+        data[id].col = newCol;
+        if (newCol === 'watched' && !wasWatched) {
+          data[id].doneAt = new Date().toISOString();
+          renderBoard();
+          if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+          openRatingModal(id);
+          await saveItem(id);
+        } else {
+          if (newCol !== 'watched') data[id].doneAt = null;
+          renderBoard();
+          if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+          await saveItem(id);
+        }
+      }
+    });
+  });
+}
+
+function getDragAfter(container, y) {
+  const els = [...container.querySelectorAll('.card:not(.dragging):not(.hidden)')];
+  return els.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// ── FILTERS ──
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.cat;
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.toggle('hidden', activeFilter !== 'all' && card.dataset.cat !== activeFilter);
+    });
+    updateCounts();
+  });
+});
+
+// ── NAV TABS ──
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const page = document.getElementById('page-' + tab.dataset.page);
+    page.classList.add('active');
+    if (tab.dataset.page === 'history') renderHistory();
+  });
+});
+
+// ── HISTORY ──
+function renderHistory() {
+  const container = document.getElementById('historyContent');
+  const watched = allItems().filter(i => i.col === 'watched' && i.doneAt);
+  if (watched.length === 0) {
+    container.innerHTML = `<div class="history-empty"><h3>Nothing here yet</h3><p>Drag items to "Watched / Read" and they'll appear here by month.</p></div>`;
+    return;
+  }
+  const grouped = {};
+  watched.forEach(item => {
+    const d = new Date(item.doneAt);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!grouped[key]) grouped[key] = { year: d.getFullYear(), month: d.getMonth(), items: [] };
+    grouped[key].items.push(item);
+  });
+  const sorted = Object.values(grouped).sort((a,b) => b.year - a.year || b.month - a.month);
+  const byYear = {};
+  sorted.forEach(g => { if (!byYear[g.year]) byYear[g.year] = []; byYear[g.year].push(g); });
+  let html = '';
+  Object.keys(byYear).sort((a,b) => b-a).forEach(year => {
+    html += `<div class="year-section"><div class="year-label">${year}</div><div class="months-grid">`;
+    byYear[year].forEach(group => {
+      html += `<div class="month-card"><div class="month-card-header"><span class="month-name">${MONTHS[group.month]}</span><span class="month-count">${group.items.length} item${group.items.length!==1?'s':''}</span></div><div class="month-items">`;
+      group.items.forEach(item => {
+        const c = item.cat==='Film'?'var(--cat-film)':item.cat==='TV'?'var(--cat-tv)':item.cat==='Book'?'var(--cat-book)':'var(--cat-other)';
+        html += `<div class="month-item"><div class="month-item-dot" style="background:${c}"></div><div>
+          <div class="month-item-text">${esc(item.title)}</div>
+          <div class="month-item-meta">${item.cat}${item.meta?' · '+esc(item.meta):''}${item.rating?' · ★ '+item.rating+'/10':''}</div>
+          ${item.thoughts ? `<div class="month-item-thoughts">"${esc(item.thoughts)}"</div>` : ''}
+        </div></div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ── RATING MODAL ──
+const THOUGHTS_PROMPTS = [
+  'What stayed with you after you finished?',
+  'Would you recommend it, and to whom?',
+  'What surprised you most?',
+  'How did it make you feel?',
+  'What was the best thing about it?',
+  'Did it meet your expectations?',
+  'What would you change about it?',
+  'One word to describe it?',
+  'Who else needs to see / read this?',
+  'What did it remind you of?',
+];
+
+let pendingRatingId = null;
+let currentRating = 0;
+
+(function() {
+  const sel = document.getElementById('ratingYear');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear; y >= thisYear - 10; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y; sel.appendChild(opt);
+  }
+})();
+
+function openRatingModal(id) {
+  pendingRatingId = id;
+  currentRating = data[id].rating || 0;
+  const item = data[id];
+  document.getElementById('ratingItemTitle').textContent = item.title;
+  document.getElementById('ratingItemMeta').textContent = item.meta || '';
+  document.getElementById('thoughtsInput').value = item.thoughts || '';
+  document.getElementById('thoughtsPrompt').textContent = THOUGHTS_PROMPTS[Math.floor(Math.random() * THOUGHTS_PROMPTS.length)];
+  const d = item.doneAt ? new Date(item.doneAt) : new Date();
+  document.getElementById('ratingMonth').value = d.getMonth();
+  document.getElementById('ratingYear').value = d.getFullYear();
+  buildStars();
+  document.getElementById('ratingOverlay').classList.add('open');
+}
+
+function buildStars() {
+  const row = document.getElementById('starRow');
+  row.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'star' + (i <= currentRating ? ' lit' : '');
+    btn.textContent = i;
+    btn.addEventListener('mouseenter', () => highlightStars(i));
+    btn.addEventListener('mouseleave', () => highlightStars(currentRating));
+    btn.addEventListener('click', () => { currentRating = i; highlightStars(i); updateReadout(); });
+    row.appendChild(btn);
+  }
+  updateReadout();
+}
+function highlightStars(n) { document.querySelectorAll('#starRow .star').forEach((s,i) => s.classList.toggle('lit', i < n)); }
+function updateReadout() {
+  const labels = ['','Terrible','Poor','Disappointing','Mediocre','Average','Decent','Good','Great','Excellent','Perfect'];
+  document.getElementById('ratingReadout').textContent = currentRating > 0 ? `${currentRating}/10 — ${labels[currentRating]}` : 'Not rated';
+}
+function closeRatingModal() {
+  document.getElementById('ratingOverlay').classList.remove('open');
+  pendingRatingId = null; currentRating = 0;
+}
+
+document.getElementById('closeRating').addEventListener('click', closeRatingModal);
+document.getElementById('skipRating').addEventListener('click', closeRatingModal);
+document.getElementById('ratingOverlay').addEventListener('click', e => { if (e.target === document.getElementById('ratingOverlay')) closeRatingModal(); });
+
+document.getElementById('submitRating').addEventListener('click', async () => {
+  if (pendingRatingId) {
+    const month = document.getElementById('ratingMonth').value;
+    const year = document.getElementById('ratingYear').value;
+    if (month !== '' && year) {
+      data[pendingRatingId].doneAt = new Date(Date.UTC(parseInt(year), parseInt(month), 1, 12)).toISOString();
+    }
+    if (currentRating > 0) data[pendingRatingId].rating = currentRating;
+    const thoughts = document.getElementById('thoughtsInput').value.trim();
+    if (thoughts) data[pendingRatingId].thoughts = thoughts;
+    renderBoard();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+    await saveItem(pendingRatingId);
+  }
+  closeRatingModal();
+});
+
+// ── ADD MODAL ──
+document.getElementById('openAdd').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('inputTitle').focus();
+});
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('inputTitle').value = '';
+  document.getElementById('inputMeta').value = '';
+  document.getElementById('inputNote').value = '';
+}
+document.getElementById('closeModal').addEventListener('click', closeModal);
+document.getElementById('cancelModal').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === document.getElementById('modalOverlay')) closeModal(); });
+
+document.querySelectorAll('.cat-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); newCat = btn.dataset.val;
+  });
+});
+document.querySelectorAll('.pri-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pri-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); newPriority = parseInt(btn.dataset.val);
+  });
+});
+
+document.getElementById('submitAdd').addEventListener('click', async () => {
+  const title = document.getElementById('inputTitle').value.trim();
+  if (!title) { document.getElementById('inputTitle').focus(); return; }
+  const id = 'g_' + Date.now();
+  data[id] = { id, col: 'backlog', doneAt: null, custom: true, cat: newCat, title,
+    meta: document.getElementById('inputMeta').value.trim(),
+    note: document.getElementById('inputNote').value.trim(),
+    priority: newPriority, rating: null, thoughts: '' };
+  renderBoard();
+  closeModal();
+  await saveItem(id);
+});
+
+// ── EDIT MODAL ──
+let editingId = null;
+let editCat = 'Film';
+let editPriority = 1;
+
+function openEditModal(id) {
+  editingId = id;
+  const item = data[id];
+  document.getElementById('editTitle').value = item.title;
+  document.getElementById('editMeta').value = item.meta || '';
+  document.getElementById('editNote').value = item.note || '';
+  document.getElementById('editThoughts').value = item.thoughts || '';
+  editCat = item.cat;
+  editPriority = item.priority;
+  document.querySelectorAll('#editCatPicker .cat-option').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === editCat);
+  });
+  document.querySelectorAll('#editPriPicker .pri-option').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === String(editPriority));
+  });
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('editOverlay').classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('closeEdit').addEventListener('click', closeEditModal);
+document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+document.getElementById('editOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('editOverlay')) closeEditModal();
+});
+
+document.querySelectorAll('#editCatPicker .cat-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#editCatPicker .cat-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); editCat = btn.dataset.val;
+  });
+});
+document.querySelectorAll('#editPriPicker .pri-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#editPriPicker .pri-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); editPriority = parseInt(btn.dataset.val);
+  });
+});
+
+document.getElementById('submitEdit').addEventListener('click', async () => {
+  if (!editingId) return;
+  const title = document.getElementById('editTitle').value.trim();
+  if (!title) { document.getElementById('editTitle').focus(); return; }
+  data[editingId].title = title;
+  data[editingId].meta = document.getElementById('editMeta').value.trim();
+  data[editingId].note = document.getElementById('editNote').value.trim();
+  data[editingId].thoughts = document.getElementById('editThoughts').value.trim();
+  data[editingId].cat = editCat;
+  data[editingId].priority = editPriority;
+  renderBoard();
+  if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+  await saveItem(editingId);
+  closeEditModal();
+});
+
+// ── DELETE ──
+async function confirmDelete(id) {
+  const item = data[id];
+  if (!confirm(`Delete "${item.title}"? This cannot be undone.`)) return;
+  delete data[id];
+  renderBoard();
+  if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'return=minimal'
+      }
+    });
+    if (!res.ok) showError('Could not delete from database.');
+  } catch(e) { showError('Could not delete from database.'); }
+}
+
+// ── UTILITY ──
+function esc(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── INIT ──
+(async () => {
+  await loadData();
+  renderBoard();
+  setupColumns();
+})();
+</script>
+</body>
+</html>
