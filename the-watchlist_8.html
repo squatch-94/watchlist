@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The WatchList</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍿</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #E43D7A;
+  --pink: #E43D7A;
+  --darkgrey: #575757;
+  --offwhite: #FEF4DD;
+  --skyblue: #66C4FE;
+  --blue: #388EEF;
+  --mutedblue: #5B81C5;
+  --teal: #0AADAB;
+  --softgreen: #6EB86F;
+  --lightgreen: #ABD78C;
+  --purple: #9653C9;
+  --magenta: #8C1464;
+  --raspberry: #8D0E40;
+  --pinkred: #E43D7A;
+  --palepink: #FFB7C1;
+  --softred: #FF5F5E;
+  --coral: #F7603D;
+  --orange: #FE902D;
+
+  --bg: var(--offwhite);
+  --surface: #FFFEF8;
+  --border: rgba(0,0,0,0.10);
+  --border-strong: rgba(0,0,0,0.18);
+  --text: var(--black);
+  --text-muted: var(--darkgrey);
+  --text-faint: #9A9A9A;
+  --accent: var(--coral);
+  --accent2: var(--teal);
+
+  --col-backlog-bg: #FEF4DD;
+  --col-watching-bg: #FEF4DD;
+  --col-watched-bg: #FEF4DD;
+
+  --cat-film: var(--coral);
+  --cat-film-bg: rgba(247,96,61,0.10);
+  --cat-tv: var(--blue);
+  --cat-tv-bg: rgba(56,142,239,0.10);
+  --cat-book: var(--teal);
+  --cat-book-bg: rgba(10,173,171,0.10);
+  --cat-stage: var(--purple);
+  --cat-stage-bg: rgba(150,83,201,0.10);
+
+  --p1: var(--coral);
+  --p2: var(--blue);
+  --p3: #C8C2B8;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+
+  --nav-h: 58px;
+  --header-h: 72px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  height: var(--nav-h);
+  background: #ffb7c1;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 0;
+  position: relative;
+  z-index: 100;
+}
+
+.nav-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--offwhite);
+  margin-right: 36px;
+  flex-shrink: 0;
+}
+
+.nav-title span { color: var(--pink); }
+
+.nav-tabs { display: flex; gap: 2px; }
+
+.nav-tab {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.5);
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+}
+.nav-tab:hover { color: #000; background: rgba(0,0,0,0.07); }
+.nav-tab.active { color: #fff; background: var(--pink); }
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-btn {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--pink);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-btn:hover { background: #c4245f; }
+.add-btn::before { content: '+'; font-size: 16px; font-weight: 300; line-height: 1; }
+
+/* ── PAGES ── */
+.page { display: none; overflow: hidden; }
+.page.active { display: flex; flex-direction: column; overflow: hidden; height: calc(100vh - var(--nav-h)); }
+
+/* ── BOARD PAGE ── */
+#page-board { flex-direction: column; }
+
+.board-controls {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-right: 4px;
+}
+
+.filter-btn {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+.filter-btn.active[data-cat="all"] { background: var(--pink); color: #fff; border-color: var(--pink); }
+.filter-btn.active[data-cat="Film"] { background: var(--cat-film); color: #fff; border-color: var(--cat-film); }
+.filter-btn.active[data-cat="TV"] { background: var(--cat-tv); color: #fff; border-color: var(--cat-tv); }
+.filter-btn.active[data-cat="Book"] { background: var(--cat-book); color: #fff; border-color: var(--cat-book); }
+.filter-btn.active[data-cat="Stage"] { background: var(--cat-stage); color: #fff; border-color: var(--cat-stage); }
+
+.stats-strip {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.stat-item { display: flex; align-items: center; gap: 5px; }
+.stat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-top: none;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  min-height: 0;
+  overflow: hidden;
+}
+.column:last-child { border-right: none; }
+
+.col-header {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.col-header[data-col="backlog"] { background: #FEF4DD; }
+.col-header[data-col="watching"] { background: #FEF4DD; }
+.col-header[data-col="watched"] { background: #FEF4DD; }
+
+.col-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.col-count {
+  font-size: 11px;
+  color: var(--text-faint);
+  background: rgba(0,0,0,0.07);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: 'League Spartan', sans-serif;
+  font-weight: 500;
+}
+
+.col-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.col-body::-webkit-scrollbar { width: 3px; }
+.col-body::-webkit-scrollbar-track { background: transparent; }
+.col-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.col-body[data-col="backlog"] { background: var(--col-backlog-bg); }
+.col-body[data-col="watching"] { background: var(--col-watching-bg); }
+.col-body[data-col="watched"] { background: var(--col-watched-bg); }
+
+.col-body.drag-over {
+  outline: 2px dashed var(--coral);
+  outline-offset: -4px;
+  border-radius: 6px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px 12px 17px;
+  cursor: grab;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  flex-shrink: 0;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.card.p1::before { display: none; }
+.card.p2::before { display: none; }
+.card.p3::before { display: none; }
+
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.10); transform: translateY(-1px); }
+.card:hover .card-actions { opacity: 1; }
+.card.dragging { opacity: 0.4; transform: rotate(1deg) scale(1.02); box-shadow: var(--shadow-lg); cursor: grabbing; }
+.card.hidden { display: none; }
+
+.card-actions {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.card:hover .card-actions { opacity: 1; }
+/* push card-top away from action buttons on hover */
+.card:hover .card-top { padding-right: 58px; }
+.card-action-btn {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  line-height: 1;
+}
+.card-action-btn:hover { background: var(--text); color: var(--surface); border-color: var(--text); }
+.card-action-btn.delete:hover { background: #e33c7a; border-color: #e33c7a; color: #fff; }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.card-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.cat-pill {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.cat-Film { background: var(--cat-film-bg); color: var(--cat-film); }
+.cat-TV { background: var(--cat-tv-bg); color: var(--cat-tv); }
+.cat-Book { background: var(--cat-book-bg); color: var(--cat-book); }
+.cat-Stage { background: var(--cat-stage-bg); color: var(--cat-stage); }
+
+.card-meta { font-size: 12px; color: var(--text-faint); margin-bottom: 5px; }
+.card-note { display: block; font-size: 12px; color: var(--text-muted); line-height: 1.5; font-style: italic; }
+.card-rating { margin-top: 6px; }
+.card-thoughts { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 5px; line-height: 1.4; border-left: 2px solid var(--border-strong); padding-left: 8px; }
+.card-move-btn {
+  display: none;
+  margin-top: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.card-move-btn:active { background: var(--border); }
+@media (max-width: 800px) {
+  .card-move-btn { display: block; }
+}
+.card-date { font-size: 10px; color: var(--text-faint); margin-top: 6px; font-family: 'League Spartan', sans-serif; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* ── BACKLOG PRIORITY GROUPS ── */
+.backlog-priority-group { margin-bottom: 6px; }
+.backlog-priority-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.12);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 5px;
+  transition: background 0.15s;
+}
+.backlog-priority-header:hover { filter: brightness(0.92); }
+.backlog-priority-label {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.85;
+}
+.backlog-priority-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  font-family: 'League Spartan', sans-serif;
+}
+.backlog-priority-arrow { font-size: 11px; transition: transform 0.2s; display: inline-block; }
+.backlog-priority-arrow.closed { transform: rotate(-90deg); }
+.backlog-priority-cards { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── WATCHED COLUMN MONTH GROUPS ── */
+.watched-month-group { margin-bottom: 6px; }
+.watched-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.12);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 5px;
+  transition: background 0.15s;
+}
+.watched-month-header:hover { background: rgba(0,0,0,0.18); }
+.watched-month-label {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.85;
+}
+.watched-month-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  font-family: 'League Spartan', sans-serif;
+}
+.watched-month-arrow { font-size: 11px; transition: transform 0.2s; display: inline-block; }
+.watched-month-arrow.closed { transform: rotate(-90deg); }
+.watched-month-cards { display: flex; flex-direction: column; gap: 6px; }
+
+.drop-placeholder {
+  height: 56px;
+  border: 2px dashed var(--coral);
+  border-radius: var(--radius);
+  background: rgba(247,96,61,0.05);
+  flex-shrink: 0;
+}
+
+/* ── HISTORY PAGE ── */
+#page-history {
+  overflow-y: auto;
+  padding: 32px 36px;
+  background: var(--bg);
+}
+
+.history-header {
+  margin-bottom: 32px;
+}
+.history-header h2 {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.history-header p { font-size: 13px; color: var(--text-muted); }
+
+.year-section { margin-bottom: 40px; }
+.year-label {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.year-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.month-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.month-card-header {
+  background: var(--pink);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.month-name {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--offwhite);
+}
+.month-count {
+  font-size: 10px;
+  color: rgba(254,244,221,0.5);
+  font-family: 'League Spartan', sans-serif;
+}
+.month-items { padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.month-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: transparent;
+  transition: background 0.1s;
+}
+.month-item:hover { background: rgba(0,0,0,0.03); }
+.month-item-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.month-item-text { font-size: 12px; color: var(--text); line-height: 1.35; }
+.month-item-meta { font-size: 10px; color: var(--text-faint); margin-top: 1px; }
+.month-empty { padding: 14px 10px; font-size: 12px; color: var(--text-faint); font-style: italic; text-align: center; }
+
+.history-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-faint);
+}
+.history-empty h3 {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+.history-empty p { font-size: 13px; }
+
+/* ── RATING STARS ── */
+.star {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  font-size: 11px;
+  font-family: 'League Spartan', sans-serif;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.star:hover, .star.lit {
+  background: var(--coral);
+  border-color: var(--coral);
+  color: #fff;
+}
+
+.rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(247,96,61,0.12);
+  color: var(--coral);
+  margin-top: 5px;
+}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.modal-header {
+  background: var(--pink);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--offwhite);
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: rgba(254,244,221,0.6);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: var(--offwhite); }
+
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.form-input, .form-select, .form-textarea {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--coral);
+}
+.form-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+.form-select { cursor: pointer; }
+
+.cat-picker { display: flex; gap: 6px; }
+.cat-option {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-muted);
+  text-align: center;
+}
+.cat-option[data-val="Film"]:hover, .cat-option[data-val="Film"].selected { background: var(--cat-film-bg); border-color: var(--cat-film); color: var(--cat-film); }
+.cat-option[data-val="TV"]:hover, .cat-option[data-val="TV"].selected { background: var(--cat-tv-bg); border-color: var(--cat-tv); color: var(--cat-tv); }
+.cat-option[data-val="Book"]:hover, .cat-option[data-val="Book"].selected { background: var(--cat-book-bg); border-color: var(--cat-book); color: var(--cat-book); }
+.cat-option[data-val="Stage"]:hover, .cat-option[data-val="Stage"].selected { background: var(--cat-stage-bg); border-color: var(--cat-stage); color: var(--cat-stage); }
+.cat-option[data-val="Script"]:hover, .cat-option[data-val="Script"].selected { background: rgba(150,83,201,0.10); border-color: #9653C9; color: #9653C9; }
+.cat-option[data-val="Podcast"]:hover, .cat-option[data-val="Podcast"].selected { background: rgba(228,61,122,0.10); border-color: #E43D7A; color: #E43D7A; }
+.cat-option[data-val="Doco"]:hover, .cat-option[data-val="Doco"].selected { background: var(--cat-doco-bg); border-color: var(--cat-doco); color: var(--cat-doco); }
+.cat-option[data-val="Other"]:hover, .cat-option[data-val="Other"].selected { background: var(--cat-other-bg); border-color: var(--cat-other); color: var(--cat-other); }
+
+.priority-picker { display: flex; gap: 6px; }
+.pri-option {
+  flex: 1;
+  padding: 7px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: 'League Spartan', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-faint);
+  text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.pri-option::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pri-option[data-val="1"]::before { background: var(--p1); }
+.pri-option[data-val="2"]::before { background: var(--p2); }
+.pri-option[data-val="3"]::before { background: var(--orange); }
+.pri-option[data-val="1"].selected { border-color: var(--p1); color: var(--p1); background: rgba(247,96,61,0.07); }
+.pri-option[data-val="2"].selected { border-color: var(--p2); color: var(--p2); background: rgba(56,142,239,0.07); }
+.pri-option[data-val="3"].selected { border-color: var(--orange); color: var(--orange); background: rgba(254,144,45,0.10); }
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.btn-cancel {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-cancel:hover { background: rgba(0,0,0,0.05); }
+.btn-submit {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  border-radius: 4px;
+  border: none;
+  background: var(--coral);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-submit:hover { background: var(--orange); }
+
+/* ── PRIORITY COLLAPSE ── */
+.priority-collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  user-select: none;
+  transition: background 0.15s;
+}
+.priority-collapse-header:hover { background: var(--border); }
+.priority-collapse-arrow {
+  font-size: 14px;
+  color: var(--text-faint);
+  transition: transform 0.2s;
+}
+.priority-collapse-arrow.closed { transform: rotate(-90deg); }
+
+/* ── SCRIPT / PODCAST CATEGORIES ── */
+--cat-script: #9653C9;
+--cat-script-bg: rgba(150,83,201,0.10);
+--cat-podcast: #E43D7A;
+--cat-podcast-bg: rgba(228,61,122,0.10);
+--cat-doco: #B5651D;
+--cat-doco-bg: rgba(181,101,29,0.10);
+--cat-other: #6B7280;
+--cat-other-bg: rgba(107,114,128,0.10);
+
+.cat-Script { background: rgba(150,83,201,0.10); color: #9653C9; }
+.cat-Podcast { background: rgba(228,61,122,0.10); color: #E43D7A; }
+.cat-Doco { background: var(--cat-doco-bg); color: var(--cat-doco); }
+.cat-Other { background: var(--cat-other-bg); color: var(--cat-other); }
+.filter-btn.active[data-cat="Script"], .filter-btn.active[data-hcat="Script"] { background: #9653C9; color: #fff; border-color: #9653C9; }
+.filter-btn.active[data-cat="Podcast"], .filter-btn.active[data-hcat="Podcast"] { background: #E43D7A; color: #fff; border-color: #E43D7A; }
+.filter-btn.active[data-cat="Doco"], .filter-btn.active[data-hcat="Doco"] { background: var(--cat-doco); color: #fff; border-color: var(--cat-doco); }
+.filter-btn.active[data-cat="Other"], .filter-btn.active[data-hcat="Other"] { background: var(--cat-other); color: #fff; border-color: var(--cat-other); }
+
+/* ── HISTORY PAGE LAYOUT ── */
+#page-history { overflow: hidden; flex-direction: column; }
+.history-controls {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.history-filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.history-body { flex: 1; min-height: 0; overflow-y: auto; padding: 28px 32px; }
+.filter-btn.active[data-hcat="all"] { background: var(--black); color: var(--offwhite); border-color: var(--black); }
+.filter-btn.active[data-hcat="Film"] { background: var(--cat-film); color: #fff; border-color: var(--cat-film); }
+.filter-btn.active[data-hcat="TV"] { background: var(--cat-tv); color: #fff; border-color: var(--cat-tv); }
+.filter-btn.active[data-hcat="Book"] { background: var(--cat-book); color: #fff; border-color: var(--cat-book); }
+.filter-btn.active[data-hcat="Stage"] { background: var(--cat-stage); color: #fff; border-color: var(--cat-stage); }
+
+/* ── STATS BAR ── */
+.history-stats-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.history-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 100px;
+}
+.history-stat-label {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.history-stat-num {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.history-stat-sub { font-size: 11px; color: var(--text-faint); }
+
+/* ── LEGEND ── */
+.history-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: fit-content;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── TOP RATED ── */
+.top-rated-section { margin-bottom: 32px; }
+.section-heading {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-heading::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.top-rated-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.top-rated-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.top-rated-card:hover { box-shadow: var(--shadow); }
+.top-rated-score {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--coral);
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 28px;
+}
+.top-rated-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+.top-rated-meta { font-size: 11px; color: var(--text-faint); }
+
+/* ── MONTH ITEMS — EDIT BUTTON ── */
+.month-item { position: relative; }
+.month-item:hover .month-item-edit { opacity: 1; }
+.month-item-edit {
+  position: absolute;
+  right: 4px; top: 4px;
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.month-item-edit:hover { background: var(--text); color: var(--surface); }
+
+/* ── MOBILE ACTION SHEET ── */
+.action-sheet-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 2000;
+  align-items: flex-end;
+  justify-content: center;
+}
+.action-sheet-overlay.open { display: flex; }
+.action-sheet {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 500px;
+  padding: 8px 0 32px;
+  box-shadow: var(--shadow-lg);
+}
+.action-sheet-title {
+  font-family: 'League Spartan', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 12px 20px 8px;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 6px;
+}
+.action-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  font-size: 15px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.action-sheet-item:hover, .action-sheet-item:active { background: var(--border); }
+.action-sheet-item .as-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.as-backlog { background: #fd8f2c; }
+.as-watching { background: #f6603d; }
+.as-watched { background: #8d0e3f; }
+.as-edit { background: var(--border); }
+.as-delete { background: #fff0f0; }
+.action-sheet-cancel {
+  margin: 8px 16px 0;
+  display: block;
+  width: calc(100% - 32px);
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--border);
+  font-family: 'League Spartan', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  body { overflow: auto; }
+  html, body { height: auto; min-height: 100%; }
+
+  nav { padding: 0 16px; gap: 8px; height: auto; min-height: var(--nav-h); flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+  .nav-title { font-size: 15px; margin-right: 0; }
+  .nav-tabs { gap: 2px; }
+  .nav-tab { padding: 6px 12px; font-size: 10px; }
+  .add-btn { padding: 7px 14px; font-size: 10px; }
+
+  .page { display: none; height: auto; overflow: visible; min-height: 0; }
+  .page.active { display: block; overflow: visible; height: auto; }
+
+  .board-controls { padding: 8px 14px; flex-wrap: wrap; gap: 6px; }
+  .stats-strip { display: none; }
+
+  .board { display: block; height: auto; overflow: visible; }
+  .column { border-right: none; border-bottom: 3px solid var(--border); overflow: visible; min-height: 0; height: auto; }
+  .column:last-child { border-bottom: none; }
+
+  .col-body { height: auto; max-height: none; overflow: visible; min-height: 80px; padding: 10px; }
+
+  .modal { width: calc(100vw - 24px); max-height: 88vh; overflow-y: auto; }
+  .modal-body { padding: 14px; gap: 12px; }
+  .modal-footer { padding: 12px 14px; }
+
+  #page-history { padding: 16px; overflow: visible; height: auto; }
+  .months-grid { grid-template-columns: 1fr; }
+
+  .board-controls { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .filter-btn { flex-shrink: 0; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-title">The <span>Watch</span>List</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="board">Board</button>
+    <button class="nav-tab" data-page="history">History</button>
+  </div>
+  <div class="nav-right">
+    <button class="add-btn" id="openAdd">Add</button>
+  </div>
+</nav>
+
+<!-- BOARD PAGE -->
+<div class="page active" id="page-board">
+  <div class="board-controls">
+    <span class="filter-label">Show</span>
+    <button class="filter-btn active" data-cat="all">All</button>
+    <button class="filter-btn" data-cat="Film">Films</button>
+    <button class="filter-btn" data-cat="TV">TV</button>
+    <button class="filter-btn" data-cat="Book">Books</button>
+    <button class="filter-btn" data-cat="Stage">Stage</button>
+    <button class="filter-btn" data-cat="Script">Scripts</button>
+    <button class="filter-btn" data-cat="Podcast">Podcasts</button>
+    <button class="filter-btn" data-cat="Doco">Doco</button>
+    <button class="filter-btn" data-cat="Other">Other</button>
+    <div class="stats-strip" id="statsStrip"></div>
+  </div>
+  <div class="board">
+    <div class="column">
+      <div class="col-header" data-col="backlog">
+        <span class="col-title">Want to Watch / Read</span>
+        <span class="col-count" id="count-backlog">0</span>
+      </div>
+      <div class="col-body" id="col-backlog" data-col="backlog"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="watching">
+        <span class="col-title">Currently Watching / Reading</span>
+        <span class="col-count" id="count-watching">0</span>
+      </div>
+      <div class="col-body" id="col-watching" data-col="watching"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="watched">
+        <span class="col-title">Watched / Read</span>
+        <span class="col-count" id="count-watched">0</span>
+      </div>
+      <div class="col-body" id="col-watched" data-col="watched"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div class="history-controls">
+    <div class="history-filters" id="historyFilters">
+      <span class="filter-label">Filter</span>
+      <button class="filter-btn active" data-hcat="all">All</button>
+      <button class="filter-btn" data-hcat="Film">Films</button>
+      <button class="filter-btn" data-hcat="TV">TV</button>
+      <button class="filter-btn" data-hcat="Book">Books</button>
+      <button class="filter-btn" data-hcat="Stage">Stage</button>
+      <button class="filter-btn" data-hcat="Script">Scripts</button>
+      <button class="filter-btn" data-hcat="Podcast">Podcasts</button>
+      <button class="filter-btn" data-hcat="Doco">Doco</button>
+      <button class="filter-btn" data-hcat="Other">Other</button>
+    </div>
+  </div>
+  <div class="history-body">
+    <div id="historyStats"></div>
+    <div id="historyTopRated"></div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<!-- RATING MODAL -->
+<div class="modal-overlay" id="ratingOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Rate it</span>
+      <button class="modal-close" id="closeRating">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="ratingItemTitle" style="font-family:'League Spartan',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
+      <div id="ratingItemMeta" style="font-size:12px;color:var(--text-faint);margin-bottom:20px;"></div>
+      <div class="form-group">
+        <label class="form-label">When did you watch / read it?</label>
+        <div style="display:flex;gap:8px;">
+          <select class="form-select" id="ratingMonth" style="flex:2;">
+            <option value="">Month</option>
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
+          </select>
+          <select class="form-select" id="ratingYear" style="flex:1;"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your rating</label>
+        <div class="rating-stars" id="ratingStars">
+          <div style="display:flex;gap:4px;margin-bottom:10px;" id="starRow"></div>
+          <div style="font-size:13px;color:var(--text-muted);text-align:center;" id="ratingReadout">Not rated</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your thoughts</label>
+        <p style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:4px;line-height:1.5;" id="thoughtsPrompt"></p>
+        <textarea class="form-textarea" id="thoughtsInput" placeholder="Write whatever comes to mind…" style="min-height:80px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="skipRating">Skip</button>
+      <button class="btn-submit" id="submitRating">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit</span>
+      <button class="modal-close" id="closeEdit">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-input" id="editTitle">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Creator / Year</label>
+        <input type="text" class="form-input" id="editMeta">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-picker" id="editCatPicker" style="flex-wrap:wrap;">
+          <button class="cat-option" data-val="Film">Film</button>
+          <button class="cat-option" data-val="TV">TV</button>
+          <button class="cat-option" data-val="Book">Book</button>
+          <button class="cat-option" data-val="Stage">Stage</button>
+          <button class="cat-option" data-val="Script">Script</button>
+          <button class="cat-option" data-val="Podcast">Podcast</button>
+          <button class="cat-option" data-val="Doco">Doco</button>
+          <button class="cat-option" data-val="Other">Other</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <div class="priority-picker" id="editPriPicker">
+          <button class="pri-option" data-val="1">Up Next</button>
+          <button class="pri-option" data-val="3">When Ready</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note</label>
+        <textarea class="form-textarea" id="editNote"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Thoughts</label>
+        <textarea class="form-textarea" id="editThoughts" style="min-height:80px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelEdit">Cancel</button>
+      <button class="btn-submit" id="submitEdit">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE ACTION SHEET -->
+<div class="action-sheet-overlay" id="actionSheetOverlay">
+  <div class="action-sheet">
+    <div class="action-sheet-title" id="actionSheetTitle">Move to…</div>
+    <button class="action-sheet-item" id="as-backlog">
+      <span class="as-icon as-backlog"></span> Want to Watch / Read
+    </button>
+    <button class="action-sheet-item" id="as-watching">
+      <span class="as-icon as-watching"></span> Currently Watching / Reading
+    </button>
+    <button class="action-sheet-item" id="as-watched">
+      <span class="as-icon as-watched"></span> Watched / Read
+    </button>
+    <button class="action-sheet-item" id="as-edit">
+      <span class="as-icon as-edit">✎</span> Edit
+    </button>
+    <button class="action-sheet-item" id="as-delete" style="color:#e33c7a;">
+      <span class="as-icon as-delete">✕</span> Delete
+    </button>
+    <button class="action-sheet-cancel" id="as-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add to List</span>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-input" id="inputTitle" placeholder="e.g. The Bear, Intermezzo...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Creator / Year</label>
+        <input type="text" class="form-input" id="inputMeta" placeholder="e.g. Christopher Storer · 2022">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Season / Streamer <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" class="form-input" id="inputStreamer" placeholder="e.g. Season 2 · Netflix">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-picker" style="flex-wrap:wrap;">
+          <button class="cat-option" data-val="Film">Film</button>
+          <button class="cat-option" data-val="TV">TV</button>
+          <button class="cat-option selected" data-val="Book">Book</button>
+          <button class="cat-option" data-val="Stage">Stage</button>
+          <button class="cat-option" data-val="Script">Script</button>
+          <button class="cat-option" data-val="Podcast">Podcast</button>
+          <button class="cat-option" data-val="Doco">Doco</button>
+          <button class="cat-option" data-val="Other">Other</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label class="form-label" style="margin:0;">Priority</label>
+          <button type="button" id="priorityToggle" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text-faint);padding:2px 4px;">
+            <span id="priorityArrow" style="font-size:13px;display:inline-block;transition:transform 0.2s;">▾</span>
+          </button>
+        </div>
+        <div id="priorityPanel">
+          <div class="priority-picker">
+            <button class="pri-option selected" data-val="1">Up Next</button>
+            <button class="pri-option" data-val="3">When Ready</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <textarea class="form-textarea" id="inputNote" placeholder="Why it's on the list, what it connects to..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelModal">Cancel</button>
+      <button class="btn-submit" id="submitAdd">Add to List</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const SEED_ITEMS = [
+  // FILMS — Watch First (p1)
+  {id:'f1',cat:'Film',title:'Portrait of a Lady on Fire',meta:'Céline Sciamma · 2019',note:'Highest priority overall. Engineered for your taste — slow, precise, devastating.',priority:1},
+  {id:'f2',cat:'Film',title:'Poor Things',meta:'Yorgos Lanthimos · 2023',note:'Lanthimos at full stretch. Emma Stone. Essential after The Favourite.',priority:1},
+  {id:'f3',cat:'Film',title:'All of Us Strangers',meta:'Andrew Haigh · 2023',note:'Grief, queerness, Paul Mescal. Emotionally catastrophic in the best way.',priority:1},
+  {id:'f4',cat:'Film',title:'Adaptation',meta:'Spike Jonze / Charlie Kaufman · 2002',note:'The more emotionally complete Kaufman film. Pairs with Being John Malkovich.',priority:1},
+  // FILMS — Watch Soon (p2)
+  {id:'f5',cat:'Film',title:'There Will Be Blood',meta:'Paul Thomas Anderson · 2007',note:'The Sopranos equivalent in cinema. Daniel Day-Lewis. Power as the subject.',priority:2},
+  {id:'f6',cat:'Film',title:'45 Years',meta:'Andrew Haigh · 2015',note:'Start here for Haigh. Charlotte Rampling. A marriage unravelling in a week.',priority:2},
+  {id:'f7',cat:'Film',title:'Weekend',meta:'Andrew Haigh · 2011',note:'Watch before 45 Years. Two men, 48 hours. The Before Sunrise of its decade.',priority:2},
+  {id:'f8',cat:'Film',title:'The Zone of Interest',meta:'Jonathan Glazer · 2023',note:'Formally unlike anything recent. Won\'t leave you for days.',priority:2},
+  {id:'f9',cat:'Film',title:'Priscilla',meta:'Sofia Coppola · 2023',note:'Coppola\'s most recent. A woman disappearing inside a relationship.',priority:2},
+  {id:'f10',cat:'Film',title:'Conclave',meta:'Edward Berger · 2024',note:'Succession energy, Catholic Church setting. Best prestige film of 2024.',priority:2},
+  // FILMS — When Ready (p3)
+  {id:'f11',cat:'Film',title:'Somewhere',meta:'Sofia Coppola · 2010',note:'Quieter than Lost in Translation. Best after, not before.',priority:3},
+  {id:'f12',cat:'Film',title:'Magnolia',meta:'Paul Thomas Anderson · 1999',note:'Three hours, eight storylines. Watch after There Will Be Blood.',priority:3},
+  {id:'f13',cat:'Film',title:'The Killing of a Sacred Deer',meta:'Yorgos Lanthimos · 2017',note:'Lanthimos\'s most disturbing film. Watch Poor Things first.',priority:3},
+  {id:'f14',cat:'Film',title:'Women Talking',meta:'Sarah Polley · 2022',note:'Dialogue-driven, morally complex.',priority:3},
+  {id:'f15',cat:'Film',title:'Withnail and I',meta:'Bruce Robinson · 1987',note:'The British cult film. Source text for Peep Show, Black Books.',priority:3},
+  {id:'f16',cat:'Film',title:'Zodiac',meta:'David Fincher · 2007',note:'Fincher\'s most precise film. Obsession story. Pairs with Mindhunter.',priority:3},
+  {id:'f17',cat:'Film',title:'About Time',meta:'Richard Curtis · 2013',note:'Disguises grief inside a romcom. For the right moment.',priority:3},
+  {id:'f18',cat:'Film',title:'Greenberg',meta:'Noah Baumbach · 2010',note:'Baumbach at his most uncomfortable. After Frances Ha.',priority:3},
+  // TV — Watch First (p1)
+  {id:'t1',cat:'TV',title:'I May Destroy You',meta:'Michaela Coel · 2020',note:'Most important British show of the 2020s. Nothing is more urgent on this list.',priority:1},
+  {id:'t2',cat:'TV',title:'The Wire',meta:'David Simon · 2002',note:'The third prestige pillar alongside The Sopranos and Succession.',priority:1},
+  {id:'t3',cat:'TV',title:'Six Feet Under',meta:'Alan Ball · 2001',note:'Best series finale in TV history. Grief, family, identity.',priority:1},
+  {id:'t4',cat:'TV',title:'Inside No. 9',meta:'Pemberton & Shearsmith · 2014',note:'British anthology. Each episode self-contained. Start with S2E1.',priority:1},
+  // TV — Watch Soon (p2)
+  {id:'t5',cat:'TV',title:'Years and Years',meta:'Russell T Davies · 2019',note:'Near-future political family drama. 6 episodes. Completely absorbing.',priority:2},
+  {id:'t6',cat:'TV',title:'Slow Horses',meta:'Apple TV+ · 2022',note:'Gary Oldman. Dry British spy thriller. Gets better every season.',priority:2},
+  {id:'t7',cat:'TV',title:'Pulling',meta:'BBC Three · 2006',note:'Sharon Horgan before Catastrophe. Darker, stranger, funnier.',priority:2},
+  {id:'t8',cat:'TV',title:'We Are Lady Parts',meta:'Channel 4 · 2021',note:'All-Muslim female punk band. Same warmth as Derry Girls.',priority:2},
+  {id:'t9',cat:'TV',title:'Utopia (UK)',meta:'Channel 4 · 2013',note:'Conspiracy, saturated colour, graphic violence as style.',priority:2},
+  {id:'t10',cat:'TV',title:'Black Mirror S1–S3',meta:'Charlie Brooker · 2011',note:'Channel 4 era only. Must-watch: National Anthem, Be Right Back, San Junipero.',priority:2},
+  // TV — When Ready (p3)
+  {id:'t11',cat:'TV',title:'Deadwood',meta:'David Milch · 2004',note:'Shakespearean language in a Western. Criminally underrated.',priority:3},
+  {id:'t12',cat:'TV',title:'Absolutely Fabulous',meta:'Jennifer Saunders · 1992',note:'Source text for Fleabag, Motherland, Catastrophe. S1–S3 only.',priority:3},
+  {id:'t13',cat:'TV',title:'Ghosts (UK)',meta:'BBC One · 2019',note:'Warm, ensemble, quietly brilliant. Best comfort watch on the list.',priority:3},
+  {id:'t14',cat:'TV',title:'Crashing',meta:'Phoebe Waller-Bridge · 2016',note:'PWB before Fleabag. Six episodes.',priority:3},
+  // BOOKS — Read First (p1)
+  {id:'b1',cat:'Book',title:'On Earth We\'re Briefly Gorgeous',meta:'Ocean Vuong · 2019',note:'Highest priority. Short, unlike anything else. Read in one sitting.',priority:1},
+  {id:'b2',cat:'Book',title:'A Little Life',meta:'Hanya Yanagihara · 2015',note:'The emotional pinnacle of this list. Save for the right headspace.',priority:1},
+  {id:'b3',cat:'Book',title:'Eileen',meta:'Ottessa Moshfegh · 2015',note:'Read before My Year of Rest. Moshfegh at her most formally interesting.',priority:1},
+  {id:'b4',cat:'Book',title:'Mrs Dalloway',meta:'Virginia Woolf · 1925',note:'Origin text for almost everything you already love. Under 200 pages.',priority:1},
+  // BOOKS — Read Soon (p2)
+  {id:'b5',cat:'Book',title:'The Years',meta:'Annie Ernaux · 2008',note:'Nobel winner. Collective autobiography. Cusk adjacency.',priority:2},
+  {id:'b6',cat:'Book',title:'Grief Is the Thing with Feathers',meta:'Max Porter · 2015',note:'Short, unlike anything else in form. One sitting.',priority:2},
+  {id:'b7',cat:'Book',title:'Americanah',meta:'Chimamanda Ngozi Adichie · 2013',note:'Race, identity, love. Precise social observation. Reads fast.',priority:2},
+  {id:'b8',cat:'Book',title:'Dept. of Speculation',meta:'Jenny Offill · 2014',note:'Fragmented form, marriage unravelling. Pair with Outline.',priority:2},
+  {id:'b9',cat:'Book',title:'Shuggie Bain',meta:'Douglas Stuart · 2020',note:'Booker winner. Good warm-up for A Little Life.',priority:2},
+  {id:'b10',cat:'Book',title:'Beautiful World, Where Are You',meta:'Sally Rooney · 2021',note:'Rooney\'s third. Read after Conversations with Friends.',priority:2},
+  // BOOKS — When Ready (p3)
+  {id:'b11',cat:'Book',title:'Middlemarch',meta:'George Eliot · 1871',note:'The greatest English novel. Long but readable. Worth the commitment.',priority:3},
+  {id:'b12',cat:'Book',title:'Giovanni\'s Room',meta:'James Baldwin · 1956',note:'Short and precise. Direct ancestor of Call Me by Your Name.',priority:3},
+  {id:'b13',cat:'Book',title:'How to Kill Your Family',meta:'Bella Mackie · 2021',note:'Black comedy, class rage. Good palate cleanser.',priority:3},
+  {id:'b14',cat:'Book',title:'Checkout 19',meta:'Claire-Louise Bennett · 2022',note:'Voice-forward, structurally strange. For Cusk devotees.',priority:3},
+  {id:'b15',cat:'Book',title:'The Great Gatsby',meta:'F. Scott Fitzgerald · 1925',note:'Short, perfect. Read with Mad Men in mind.',priority:3},
+  {id:'b16',cat:'Book',title:'A Room with a View',meta:'E.M. Forster · 1908',note:'Light but pointed. Funny in the same dry way as Good Material.',priority:3},
+  // STAGE — See First (p1)
+  {id:'s1',cat:'Stage',title:'Cabaret',meta:'Musical · Kander & Ebb',note:'The definitive revival has been running in London. Dark, sensual, politically sharp. See it before it closes.',priority:1},
+  {id:'s2',cat:'Stage',title:'The Lehman Trilogy',meta:'Play · Stefano Massini / Sam Mendes',note:'Three actors, 164 years of American capitalism collapsing. One of the great theatrical experiences of the decade.',priority:1},
+  {id:'s3',cat:'Stage',title:'Hamlet',meta:'Shakespeare · various productions',note:'The one to see live at least once. Check what\'s running at the National or Globe.',priority:1},
+  // STAGE — See Soon (p2)
+  {id:'s4',cat:'Stage',title:'Fleabag (stage version)',meta:'Phoebe Waller-Bridge · Soho Theatre',note:'The original one-woman show the TV series came from. Keep an eye for revivals.',priority:2},
+  {id:'s5',cat:'Stage',title:'Jerusalem',meta:'Play · Jez Butterworth',note:'Mark Rylance in the role of a lifetime. Revivals happen — catch it when it returns.',priority:2},
+  {id:'s6',cat:'Stage',title:'Hamilton',meta:'Musical · Lin-Manuel Miranda',note:'Still running in the West End. Worth it for the craft regardless of the hype.',priority:2},
+  {id:'s7',cat:'Stage',title:'The Book of Mormon',meta:'Musical · Parker, Stone & Lopez',note:'Funnier than it has any right to be. Long-running in London. Good night out.',priority:2},
+  // STAGE — When Ready (p3)
+  {id:'s8',cat:'Stage',title:'A Streetcar Named Desire',meta:'Tennessee Williams · various',note:'The great American play. Powerful live in a way the film can\'t replicate.',priority:3},
+  {id:'s9',cat:'Stage',title:'Angels in America',meta:'Tony Kushner · National Theatre',note:'Two-part epic. AIDS, politics, identity, America. Worth the full day commitment.',priority:3},
+  {id:'s10',cat:'Stage',title:'Merrily We Roll Along',meta:'Musical · Sondheim',note:'Now a film but the stage version is different. Sondheim\'s most emotionally honest work.',priority:3},
+];
+
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://qotnhrwksvilzmfqleat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvdG5ocndrc3ZpbHptZnFsZWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MDg0NTYsImV4cCI6MjA4OTQ4NDQ1Nn0.sZL-yI9HgqIcVHqCLwu8T23yLAFwVcw7w7CEBbyyl-Q';
+const TABLE = 'watchlist';
+
+const db = {
+  async get() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async upsert(row) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(row)
+    });
+    if (!res.ok) throw new Error(await res.text());
+  },
+  async update(id, fields) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(fields)
+    });
+    if (!res.ok) throw new Error(await res.text());
+  }
+};
+
+// ── STATE ──
+let data = {};
+let activeFilter = 'all';
+let dragItem = null;
+let placeholder = null;
+let newCat = 'Book';
+let newPriority = 1;
+
+function allItems() { return Object.values(data); }
+
+function showLoading(msg = 'Loading…') {
+  let el = document.getElementById('loadingOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(254,244,221,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:League Spartan,sans-serif;';
+    el.innerHTML = `<div style="font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#575757;" id="loadingMsg"></div><div style="margin-top:12px;width:40px;height:2px;background:#f6603d;animation:loadbar 1s ease-in-out infinite alternate;" ></div><style>@keyframes loadbar{from{transform:scaleX(0.2)}to{transform:scaleX(1)}}</style>`;
+    document.body.appendChild(el);
+  }
+  document.getElementById('loadingMsg').textContent = msg;
+  el.style.display = 'flex';
+}
+
+function hideLoading() {
+  const el = document.getElementById('loadingOverlay');
+  if (el) el.style.display = 'none';
+}
+
+function showError(msg) {
+  hideLoading();
+  let el = document.getElementById('errorBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'errorBanner';
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:10px 20px;border-radius:6px;font-size:12px;z-index:9999;font-family:DM Sans,sans-serif;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+async function loadData() {
+  showLoading('Loading your list…');
+  try {
+    const rows = await db.get();
+    // index by id
+    const remote = {};
+    rows.forEach(r => {
+      remote[r.id] = {
+        id: r.id, col: r.col, cat: r.cat, title: r.title,
+        meta: r.meta || '', note: r.note || '',
+        priority: r.priority || 1, rating: r.rating || null,
+        thoughts: r.thoughts || '',
+        custom: r.custom || false, doneAt: r.done_at || null
+      };
+    });
+    // seed only if table is completely empty (first load)
+    if (rows.length === 0) {
+      const toInsert = SEED_ITEMS.map(item => ({
+        id: item.id, col: 'backlog', cat: item.cat, title: item.title,
+        meta: item.meta || '', note: item.note || '', priority: item.priority,
+        rating: null, thoughts: '', custom: false, done_at: null
+      }));
+      if (toInsert.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates' },
+          body: JSON.stringify(toInsert)
+        });
+        SEED_ITEMS.forEach(item => {
+          remote[item.id] = { ...item, col: 'backlog', doneAt: null, custom: false, rating: null, thoughts: '' };
+        });
+      }
+    }
+    data = remote;
+  } catch(e) {
+    showError('Could not connect to database. Check your connection.');
+    // fallback: seed locally so UI still works
+    SEED_ITEMS.forEach(item => {
+      if (!data[item.id]) data[item.id] = { ...item, col: 'backlog', doneAt: null, custom: false, rating: null };
+    });
+  }
+  hideLoading();
+}
+
+async function saveItem(id) {
+  const item = data[id];
+  if (!item) return;
+  try {
+    await db.upsert({
+      id: item.id, col: item.col, cat: item.cat, title: item.title,
+      meta: item.meta || '', note: item.note || '', priority: item.priority,
+      rating: item.rating || null, thoughts: item.thoughts || '',
+      custom: item.custom || false, done_at: item.doneAt || null
+    });
+  } catch(e) {
+    showError('Could not save. Check your connection.');
+  }
+}
+
+// ── RENDER BOARD ──
+function renderBoard() {
+  // ── BACKLOG — grouped by priority ──
+  const backlogEl = document.getElementById('col-backlog');
+  backlogEl.innerHTML = '';
+  const backlogItems = allItems().filter(i => i.col === 'backlog');
+  const backlogVisible = activeFilter === 'all' ? backlogItems : backlogItems.filter(i => i.cat === activeFilter);
+
+  const priorityGroups = {
+    1: { label: 'Up Next', items: [] },
+    3: { label: 'When Ready', items: [] },
+    2: { label: 'When Ready', items: [] }, // legacy priority 2 falls into When Ready
+  };
+  backlogVisible.forEach(item => {
+    const p = item.priority === 1 ? 1 : 3;
+    priorityGroups[p].items.push(item);
+  });
+
+  [1, 3].forEach(p => {
+    const group = priorityGroups[p];
+    if (group.items.length === 0) return;
+    const groupEl = document.createElement('div');
+    groupEl.className = 'backlog-priority-group';
+    const header = document.createElement('div');
+    header.className = 'backlog-priority-header';
+    // Up Next = dark tint, When Ready = yellow
+    const headerBg = p === 1 ? 'rgba(0,0,0,0.15)' : 'rgba(254,144,45,0.55)';
+    header.style.background = headerBg;
+    header.innerHTML = `
+      <span class="backlog-priority-label">${group.label}</span>
+      <span class="backlog-priority-meta">
+        <span>${group.items.length} item${group.items.length !== 1 ? 's' : ''}</span>
+        <span class="backlog-priority-arrow">▾</span>
+      </span>`;
+    const cardsEl = document.createElement('div');
+    cardsEl.className = 'backlog-priority-cards';
+    group.items.forEach(item => cardsEl.appendChild(makeCard(item)));
+    header.addEventListener('click', () => {
+      const open = cardsEl.style.display !== 'none';
+      cardsEl.style.display = open ? 'none' : 'flex';
+      header.querySelector('.backlog-priority-arrow').classList.toggle('closed', open);
+    });
+    groupEl.appendChild(header);
+    groupEl.appendChild(cardsEl);
+    backlogEl.appendChild(groupEl);
+  });
+
+  // ── WATCHING — flat list ──
+  const watchingEl = document.getElementById('col-watching');
+  watchingEl.innerHTML = '';
+  allItems().filter(i => i.col === 'watching').forEach(item => {
+    watchingEl.appendChild(makeCard(item));
+  });
+
+  // ── WATCHED — grouped by month ──
+  const watchedEl = document.getElementById('col-watched');
+  watchedEl.innerHTML = '';
+  const watched = allItems().filter(i => i.col === 'watched');
+  const visible = activeFilter === 'all' ? watched : watched.filter(i => i.cat === activeFilter);
+
+  if (visible.length > 0) {
+    const groups = {};
+    visible.forEach(item => {
+      const d = item.doneAt ? new Date(item.doneAt) : new Date();
+      const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+      if (!groups[key]) groups[key] = { label: `${MONTHS[d.getMonth()]} ${d.getFullYear()}`, items: [] };
+      groups[key].items.push(item);
+    });
+    Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(key => {
+      const group = groups[key];
+      const groupEl = document.createElement('div');
+      groupEl.className = 'watched-month-group';
+      const header = document.createElement('div');
+      header.className = 'watched-month-header';
+      header.innerHTML = `
+        <span class="watched-month-label">${group.label}</span>
+        <span class="watched-month-meta">
+          <span>${group.items.length} item${group.items.length !== 1 ? 's' : ''}</span>
+          <span class="watched-month-arrow">▾</span>
+        </span>`;
+      const cardsEl = document.createElement('div');
+      cardsEl.className = 'watched-month-cards';
+      const catOrder = ['Film','TV','Book','Stage','Script','Podcast','Doco','Other'];
+      [...group.items].sort((a,b) => catOrder.indexOf(a.cat) - catOrder.indexOf(b.cat))
+        .forEach(item => cardsEl.appendChild(makeCard(item)));
+      header.addEventListener('click', () => {
+        const open = cardsEl.style.display !== 'none';
+        cardsEl.style.display = open ? 'none' : 'flex';
+        header.querySelector('.watched-month-arrow').classList.toggle('closed', open);
+      });
+      groupEl.appendChild(header);
+      groupEl.appendChild(cardsEl);
+      watchedEl.appendChild(groupEl);
+    });
+  }
+
+  updateCounts(); updateStats();
+}
+
+function makeCard(item) {
+  const div = document.createElement('div');
+  div.className = `card p${item.priority}`;
+  div.dataset.id = item.id;
+  div.dataset.cat = item.cat;
+  div.draggable = true;
+  if (activeFilter !== 'all' && item.cat !== activeFilter) div.classList.add('hidden');
+
+  // Category colour left border accent on all cards
+  const catBorders = {
+    Film:    '#F7603D',
+    TV:      '#388EEF',
+    Book:    '#0AADAB',
+    Stage:   '#9653C9',
+    Script:  '#9653C9',
+    Podcast: '#E43D7A',
+    Doco:    '#B5651D',
+    Other:   '#6B7280',
+  };
+  const borderCol = catBorders[item.cat] || '#C8C2B8';
+  div.style.borderLeftColor = borderCol;
+  div.style.borderLeftWidth = '4px';
+
+  div.innerHTML = `
+    <div class="card-actions">
+      <button class="card-action-btn edit" title="Edit">✎</button>
+      <button class="card-action-btn delete" title="Delete">✕</button>
+    </div>
+    <div class="card-top">
+      <span class="card-title">${esc(item.title)}</span>
+      <span class="cat-pill cat-${item.cat}">${item.cat}</span>
+    </div>
+    <div class="card-meta">${esc(item.meta || '')}</div>
+    ${item.note ? `<div class="card-note">${esc(item.note)}</div>` : ''}
+    ${item.rating ? `<div class="card-rating"><div class="rating-badge">★ ${item.rating}/10</div></div>` : ''}
+    ${item.thoughts ? `<div class="card-thoughts">${esc(item.thoughts)}</div>` : ''}
+    <button class="card-move-btn">Move ›</button>
+  `;
+
+  div.querySelector('.edit').addEventListener('click', e => { e.stopPropagation(); openEditModal(item.id); });
+  div.querySelector('.delete').addEventListener('click', e => { e.stopPropagation(); confirmDelete(item.id); });
+  div.querySelector('.card-move-btn').addEventListener('click', e => { e.stopPropagation(); openActionSheet(item.id); });
+  div.addEventListener('dragstart', onDragStart);
+  div.addEventListener('dragend', onDragEnd);
+  // Mobile tap
+  div.addEventListener('click', e => {
+    if (window.innerWidth <= 800 && !e.target.closest('.card-action-btn') && !e.target.closest('.card-move-btn')) {
+      openActionSheet(item.id);
+    }
+  });
+  return div;
+}
+
+function updateCounts() {
+  const backlogCount = activeFilter === 'all'
+    ? allItems().filter(i => i.col === 'backlog').length
+    : allItems().filter(i => i.col === 'backlog' && i.cat === activeFilter).length;
+  const watchingCount = activeFilter === 'all'
+    ? allItems().filter(i => i.col === 'watching').length
+    : allItems().filter(i => i.col === 'watching' && i.cat === activeFilter).length;
+  const watchedCount = activeFilter === 'all'
+    ? allItems().filter(i => i.col === 'watched').length
+    : allItems().filter(i => i.col === 'watched' && i.cat === activeFilter).length;
+  document.getElementById('count-backlog').textContent = backlogCount;
+  document.getElementById('count-watching').textContent = watchingCount;
+  document.getElementById('count-watched').textContent = watchedCount;
+}
+
+function updateStats() {
+  const watched = allItems().filter(i => i.col === 'watched');
+  const total = allItems().length;
+  document.getElementById('statsStrip').innerHTML = `
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-film)"></span>${watched.filter(i=>i.cat==='Film').length} films</span>
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-tv)"></span>${watched.filter(i=>i.cat==='TV').length} TV</span>
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-book)"></span>${watched.filter(i=>i.cat==='Book').length} books</span>
+    <span class="stat-item"><span class="stat-dot" style="background:var(--cat-stage)"></span>${watched.filter(i=>i.cat==='Stage').length} stage</span>
+    <span class="stat-item"><span class="stat-dot" style="background:#9653C9"></span>${watched.filter(i=>i.cat==='Script').length} scripts</span>
+    <span class="stat-item"><span class="stat-dot" style="background:#E43D7A"></span>${watched.filter(i=>i.cat==='Podcast').length} podcasts</span>
+    <span class="stat-item"><span class="stat-dot" style="background:#B5651D"></span>${watched.filter(i=>i.cat==='Doco').length} doco</span>
+    <span class="stat-item"><span class="stat-dot" style="background:#6B7280"></span>${watched.filter(i=>i.cat==='Other').length} other</span>
+    <span class="stat-item" style="color:var(--text-faint)">${watched.length}/${total} done</span>
+  `;
+}
+
+// ── DRAG AND DROP ──
+function onDragStart(e) {
+  dragItem = e.currentTarget;
+  dragItem.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragItem.dataset.id);
+  placeholder = document.createElement('div');
+  placeholder.className = 'drop-placeholder';
+}
+
+function onDragEnd() {
+  if (dragItem) dragItem.classList.remove('dragging');
+  if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+  document.querySelectorAll('.col-body').forEach(c => c.classList.remove('drag-over'));
+  dragItem = null; placeholder = null;
+}
+
+function setupColumns() {
+  document.querySelectorAll('.col-body').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      col.classList.add('drag-over');
+      const after = getDragAfter(col, e.clientY);
+      if (placeholder) {
+        after == null ? col.appendChild(placeholder) : col.insertBefore(placeholder, after);
+      }
+    });
+    col.addEventListener('dragleave', e => {
+      if (!col.contains(e.relatedTarget)) {
+        col.classList.remove('drag-over');
+        if (placeholder && placeholder.parentNode === col) col.removeChild(placeholder);
+      }
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+      const id = e.dataTransfer.getData('text/plain');
+      const newCol = col.dataset.col;
+      if (id && newCol && data[id]) {
+        const wasWatched = data[id].col === 'watched';
+        data[id].col = newCol;
+        if (newCol === 'watched' && !wasWatched) {
+          data[id].doneAt = new Date().toISOString();
+          renderBoard();
+          if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+          openRatingModal(id);
+          await saveItem(id);
+        } else {
+          if (newCol !== 'watched') data[id].doneAt = null;
+          renderBoard();
+          if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+          await saveItem(id);
+        }
+      }
+    });
+  });
+}
+
+function getDragAfter(container, y) {
+  const els = [...container.querySelectorAll('.card:not(.dragging):not(.hidden)')];
+  return els.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// ── FILTERS ──
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.cat;
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.toggle('hidden', activeFilter !== 'all' && card.dataset.cat !== activeFilter);
+    });
+    updateCounts();
+  });
+});
+
+// ── NAV TABS ──
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const page = document.getElementById('page-' + tab.dataset.page);
+    page.classList.add('active');
+    if (tab.dataset.page === 'history') renderHistory();
+  });
+});
+
+// ── HISTORY ──
+let historyFilter = 'all';
+
+function catColour(cat) {
+  const map = { Film:'var(--cat-film)', TV:'var(--cat-tv)', Book:'var(--cat-book)', Stage:'var(--cat-stage)', Script:'#9653C9', Podcast:'#E43D7A', Doco:'#B5651D', Other:'#6B7280' };
+  return map[cat] || 'var(--text-faint)';
+}
+
+function renderHistory() {
+  const allWatched = allItems().filter(i => i.col === 'watched' && i.doneAt);
+  const watched = historyFilter === 'all' ? allWatched : allWatched.filter(i => i.cat === historyFilter);
+
+  // ── STATS ──
+  const statsEl = document.getElementById('historyStats');
+  const cats = ['Film','TV','Book','Stage','Script','Podcast','Doco','Other'];
+  const yearNow = new Date().getFullYear();
+  const thisYear = allWatched.filter(i => new Date(i.doneAt).getFullYear() === yearNow);
+  const totalThisYear = thisYear.length;
+
+  let statsHtml = `<div class="history-stats-row">
+    <div class="history-stat-card">
+      <div class="history-stat-label">Total ${yearNow}</div>
+      <div class="history-stat-num">${totalThisYear}</div>
+      <div class="history-stat-sub">items</div>
+    </div>`;
+  cats.forEach(cat => {
+    const n = thisYear.filter(i => i.cat === cat).length;
+    if (n === 0) return;
+    statsHtml += `<div class="history-stat-card">
+      <div class="history-stat-label"><span style="width:7px;height:7px;border-radius:50%;background:${catColour(cat)};display:inline-block;flex-shrink:0;"></span>${cat}</div>
+      <div class="history-stat-num">${n}</div>
+      <div class="history-stat-sub">this year</div>
+    </div>`;
+  });
+  statsHtml += `</div>`;
+
+  // ── LEGEND ──
+  const activeCats = [...new Set(allWatched.map(i => i.cat))];
+  statsHtml += `<div class="history-legend">`;
+  activeCats.forEach(cat => {
+    statsHtml += `<div class="legend-item"><span class="legend-dot" style="background:${catColour(cat)}"></span>${cat}</div>`;
+  });
+  statsHtml += `</div>`;
+  statsEl.innerHTML = statsHtml;
+
+  // ── TOP RATED ──
+  const topEl = document.getElementById('historyTopRated');
+  if (historyFilter === 'all') {
+    const ratedItems = allWatched.filter(i => i.rating);
+    let topHtml = '';
+    if (ratedItems.length > 0) {
+      topHtml += `<div class="top-rated-section"><div class="section-heading">Top Rated</div><div class="top-rated-grid">`;
+      cats.forEach(cat => {
+        const catRated = ratedItems.filter(i => i.cat === cat).sort((a,b) => b.rating - a.rating);
+        if (catRated.length === 0) return;
+        const top = catRated[0];
+        topHtml += `<div class="top-rated-card" onclick="openEditModal('${top.id}')">
+          <div class="top-rated-score">${top.rating}</div>
+          <div>
+            <div class="top-rated-title">${esc(top.title)}</div>
+            <div class="top-rated-meta">${cat}${top.meta ? ' · ' + esc(top.meta) : ''}</div>
+          </div>
+        </div>`;
+      });
+      topHtml += `</div></div>`;
+    }
+    topEl.innerHTML = topHtml;
+  } else {
+    topEl.innerHTML = '';
+  }
+
+  // ── MONTHLY GRID ──
+  const container = document.getElementById('historyContent');
+  if (watched.length === 0) {
+    container.innerHTML = `<div class="history-empty"><h3>Nothing here yet</h3><p>Move items to Watched and they'll appear here by month.</p></div>`;
+    return;
+  }
+
+  const grouped = {};
+  watched.forEach(item => {
+    const d = new Date(item.doneAt);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!grouped[key]) grouped[key] = { year: d.getFullYear(), month: d.getMonth(), items: [] };
+    grouped[key].items.push(item);
+  });
+
+  const sorted = Object.values(grouped).sort((a,b) => b.year - a.year || b.month - a.month);
+  const byYear = {};
+  sorted.forEach(g => { if (!byYear[g.year]) byYear[g.year] = []; byYear[g.year].push(g); });
+
+  let html = '';
+  Object.keys(byYear).sort((a,b) => b-a).forEach(year => {
+    html += `<div class="year-section"><div class="year-label">${year}</div><div class="months-grid">`;
+    byYear[year].forEach(group => {
+      html += `<div class="month-card">
+        <div class="month-card-header">
+          <span class="month-name">${MONTHS[group.month]}</span>
+          <span class="month-count">${group.items.length} item${group.items.length!==1?'s':''}</span>
+        </div>
+        <div class="month-items">
+          ${group.items.map(item => `
+            <div class="month-item">
+              <button class="month-item-edit" onclick="openEditModal('${item.id}')" title="Edit">✎</button>
+              <div class="month-item-dot" style="background:${catColour(item.cat)}"></div>
+              <div>
+                <div class="month-item-text">${esc(item.title)}</div>
+                <div class="month-item-meta">${item.cat}${item.meta?' · '+esc(item.meta):''}${item.rating?' · ★ '+item.rating+'/10':''}</div>
+                ${item.thoughts?`<div style="font-size:11px;color:var(--text-muted);font-style:italic;margin-top:3px;line-height:1.4;">"${esc(item.thoughts)}"</div>`:''}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ── ADD MODAL ──
+const modalOverlay = document.getElementById('modalOverlay');
+
+document.getElementById('openAdd').addEventListener('click', () => {
+  // Default category to whatever filter is active on the board
+  if (activeFilter !== 'all') {
+    newCat = activeFilter;
+    document.querySelectorAll('#modalOverlay .cat-option').forEach(b => {
+      b.classList.toggle('selected', b.dataset.val === newCat);
+    });
+  }
+  modalOverlay.classList.add('open');
+  document.getElementById('inputTitle').focus();
+});
+document.getElementById('closeModal').addEventListener('click', closeModal);
+document.getElementById('cancelModal').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+function closeModal() {
+  modalOverlay.classList.remove('open');
+  document.getElementById('inputTitle').value = '';
+  document.getElementById('inputMeta').value = '';
+  document.getElementById('inputStreamer').value = '';
+  document.getElementById('inputNote').value = '';
+}
+
+// Priority collapse
+let priorityOpen = true;
+document.getElementById('priorityToggle').addEventListener('click', () => {
+  priorityOpen = !priorityOpen;
+  document.getElementById('priorityPanel').style.display = priorityOpen ? 'block' : 'none';
+  document.getElementById('priorityArrow').style.transform = priorityOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+});
+
+// Cat picker — scope to add modal only
+document.querySelectorAll('#modalOverlay .cat-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#modalOverlay .cat-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    newCat = btn.dataset.val;
+  });
+});
+
+// Priority picker — scope to add modal only
+document.querySelectorAll('#modalOverlay .pri-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#modalOverlay .pri-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    newPriority = parseInt(btn.dataset.val);
+  });
+});
+
+document.getElementById('submitAdd').addEventListener('click', async () => {
+  const title = document.getElementById('inputTitle').value.trim();
+  if (!title) { document.getElementById('inputTitle').focus(); return; }
+  const id = 'custom_' + Date.now();
+  const metaVal = document.getElementById('inputMeta').value.trim();
+  const streamerVal = document.getElementById('inputStreamer').value.trim();
+  const meta = [metaVal, streamerVal].filter(Boolean).join(' · ');
+  data[id] = {
+    id, col: 'backlog', doneAt: null, custom: true,
+    cat: newCat, title, meta,
+    note: document.getElementById('inputNote').value.trim(),
+    priority: newPriority, rating: null, thoughts: ''
+  };
+  renderBoard();
+  closeModal();
+  await saveItem(id);
+});
+
+// ── HISTORY FILTERS ──
+document.querySelectorAll('[data-hcat]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-hcat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    historyFilter = btn.dataset.hcat;
+    renderHistory();
+  });
+});
+
+// ── RATING MODAL ──
+const THOUGHTS_PROMPTS = [
+  'What stayed with you after you finished?',
+  'Would you recommend it, and to whom?',
+  'What surprised you most?',
+  'How did it make you feel?',
+  'What was the best thing about it?',
+  'Did it meet your expectations?',
+  'What would you change about it?',
+  'One word to describe it?',
+  'Who else needs to see / read this?',
+  'What did it remind you of?',
+];
+
+let pendingRatingId = null;
+let currentRating = 0;
+
+(function() {
+  const sel = document.getElementById('ratingYear');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear; y >= thisYear - 10; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y; sel.appendChild(opt);
+  }
+})();
+
+function openRatingModal(id) {
+  pendingRatingId = id;
+  currentRating = data[id].rating || 0;
+  const item = data[id];
+  document.getElementById('ratingItemTitle').textContent = item.title;
+  document.getElementById('ratingItemMeta').textContent = item.meta || '';
+  document.getElementById('thoughtsInput').value = item.thoughts || '';
+  document.getElementById('thoughtsPrompt').textContent = THOUGHTS_PROMPTS[Math.floor(Math.random() * THOUGHTS_PROMPTS.length)];
+  const d = item.doneAt ? new Date(item.doneAt) : new Date();
+  document.getElementById('ratingMonth').value = d.getMonth();
+  document.getElementById('ratingYear').value = d.getFullYear();
+  buildStars();
+  document.getElementById('ratingOverlay').classList.add('open');
+}
+
+function buildStars() {
+  const row = document.getElementById('starRow');
+  row.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'star' + (i <= currentRating ? ' lit' : '');
+    btn.textContent = i;
+    btn.addEventListener('mouseenter', () => highlightStars(i));
+    btn.addEventListener('mouseleave', () => highlightStars(currentRating));
+    btn.addEventListener('click', () => { currentRating = i; highlightStars(i); updateReadout(); });
+    row.appendChild(btn);
+  }
+  updateReadout();
+}
+
+function highlightStars(n) {
+  document.querySelectorAll('#starRow .star').forEach((s, i) => {
+    s.classList.toggle('lit', i < n);
+  });
+}
+
+function updateReadout() {
+  const readout = document.getElementById('ratingReadout');
+  const labels = ['','Terrible','Poor','Disappointing','Mediocre','Average','Decent','Good','Great','Excellent','Perfect'];
+  readout.textContent = currentRating > 0 ? `${currentRating}/10 — ${labels[currentRating]}` : 'Not rated';
+}
+
+function closeRatingModal() {
+  document.getElementById('ratingOverlay').classList.remove('open');
+  pendingRatingId = null;
+  currentRating = 0;
+}
+
+document.getElementById('closeRating').addEventListener('click', closeRatingModal);
+document.getElementById('skipRating').addEventListener('click', closeRatingModal);
+document.getElementById('submitRating').addEventListener('click', async () => {
+  if (pendingRatingId) {
+    const month = document.getElementById('ratingMonth').value;
+    const year = document.getElementById('ratingYear').value;
+    if (month !== '' && year) {
+      data[pendingRatingId].doneAt = new Date(Date.UTC(parseInt(year), parseInt(month), 1, 12)).toISOString();
+    }
+    if (currentRating > 0) data[pendingRatingId].rating = currentRating;
+    const thoughts = document.getElementById('thoughtsInput').value.trim();
+    if (thoughts) data[pendingRatingId].thoughts = thoughts;
+    renderBoard();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+    await saveItem(pendingRatingId);
+  }
+  closeRatingModal();
+});
+document.getElementById('ratingOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('ratingOverlay')) closeRatingModal();
+});
+
+// ── EDIT MODAL ──
+let editingId = null;
+let editCat = 'Film';
+let editPriority = 1;
+
+function openEditModal(id) {
+  editingId = id;
+  const item = data[id];
+  document.getElementById('editTitle').value = item.title;
+  document.getElementById('editMeta').value = item.meta || '';
+  document.getElementById('editNote').value = item.note || '';
+  document.getElementById('editThoughts').value = item.thoughts || '';
+  editCat = item.cat;
+  editPriority = item.priority;
+  document.querySelectorAll('#editCatPicker .cat-option').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === editCat);
+  });
+  document.querySelectorAll('#editPriPicker .pri-option').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === String(editPriority));
+  });
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('editOverlay').classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('closeEdit').addEventListener('click', closeEditModal);
+document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+document.getElementById('editOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('editOverlay')) closeEditModal();
+});
+
+document.querySelectorAll('#editCatPicker .cat-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#editCatPicker .cat-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); editCat = btn.dataset.val;
+  });
+});
+document.querySelectorAll('#editPriPicker .pri-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#editPriPicker .pri-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); editPriority = parseInt(btn.dataset.val);
+  });
+});
+
+document.getElementById('submitEdit').addEventListener('click', async () => {
+  if (!editingId) return;
+  const title = document.getElementById('editTitle').value.trim();
+  if (!title) { document.getElementById('editTitle').focus(); return; }
+  data[editingId].title = title;
+  data[editingId].meta = document.getElementById('editMeta').value.trim();
+  data[editingId].note = document.getElementById('editNote').value.trim();
+  data[editingId].thoughts = document.getElementById('editThoughts').value.trim();
+  data[editingId].cat = editCat;
+  data[editingId].priority = editPriority;
+  renderBoard();
+  if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+  await saveItem(editingId);
+  closeEditModal();
+});
+
+// ── DELETE ──
+async function confirmDelete(id) {
+  const item = data[id];
+  if (!confirm(`Delete "${item.title}"? This cannot be undone.`)) return;
+  delete data[id];
+  renderBoard();
+  if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'return=minimal'
+      }
+    });
+    if (!res.ok) showError('Could not delete from database.');
+  } catch(e) { showError('Could not delete from database.'); }
+}
+
+// ── MOBILE ACTION SHEET ──
+let actionSheetId = null;
+
+function openActionSheet(id) {
+  actionSheetId = id;
+  const item = data[id];
+  document.getElementById('actionSheetTitle').textContent = item.title;
+  // Hide move options that match current column
+  ['backlog','watching','watched'].forEach(col => {
+    const btn = document.getElementById('as-' + col);
+    btn.style.display = item.col === col ? 'none' : 'flex';
+  });
+  document.getElementById('actionSheetOverlay').classList.add('open');
+}
+
+function closeActionSheet() {
+  document.getElementById('actionSheetOverlay').classList.remove('open');
+  actionSheetId = null;
+}
+
+async function moveCardTo(col) {
+  if (!actionSheetId) return;
+  const id = actionSheetId;
+  closeActionSheet();
+  const wasWatched = data[id].col === 'watched';
+  data[id].col = col;
+  if (col === 'watched' && !wasWatched) {
+    data[id].doneAt = new Date().toISOString();
+    renderBoard();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+    openRatingModal(id);
+    await saveItem(id);
+  } else {
+    if (col !== 'watched') data[id].doneAt = null;
+    renderBoard();
+    if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+    await saveItem(id);
+  }
+}
+
+document.getElementById('as-backlog').addEventListener('click', () => moveCardTo('backlog'));
+document.getElementById('as-watching').addEventListener('click', () => moveCardTo('watching'));
+document.getElementById('as-watched').addEventListener('click', () => moveCardTo('watched'));
+document.getElementById('as-edit').addEventListener('click', () => {
+  const id = actionSheetId; closeActionSheet(); openEditModal(id);
+});
+document.getElementById('as-delete').addEventListener('click', () => {
+  const id = actionSheetId; closeActionSheet(); confirmDelete(id);
+});
+document.getElementById('as-cancel').addEventListener('click', closeActionSheet);
+document.getElementById('actionSheetOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('actionSheetOverlay')) closeActionSheet();
+});
+
+// ── UTILITY ──
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──
+(async () => {
+  await loadData();
+  renderBoard();
+  setupColumns();
+})();
+</script>
+</body>
+</html>
