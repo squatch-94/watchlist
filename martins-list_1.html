@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Martin's List</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --espresso: #3D3530;
+  --stone: #6B5E54;
+  --sand: #9E8E82;
+  --mist: #C4B8B0;
+  --cream: #F5F0E8;
+  --surface: #FDFAF5;
+  --border: rgba(61,53,48,0.10);
+  --border-strong: rgba(61,53,48,0.20);
+  --text: var(--espresso);
+  --text-muted: var(--stone);
+  --text-faint: var(--sand);
+  --col-bg: #F5F0E8;
+  --accent: #8B6F47;
+  --accent-hover: #6D5435;
+  --cat-film: #5C4A3A;      --cat-film-bg: rgba(92,74,58,0.10);
+  --cat-tv: #4A5C6B;        --cat-tv-bg: rgba(74,92,107,0.10);
+  --cat-fiction: #6B5C3A;   --cat-fiction-bg: rgba(107,92,58,0.10);
+  --cat-nonfiction: #3A5C4A; --cat-nonfiction-bg: rgba(58,92,74,0.10);
+  --cat-lit: #6B4A5C;       --cat-lit-bg: rgba(107,74,92,0.10);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --nav-h: 58px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);font-size:14px;overflow:hidden;}
+
+/* ── NAV ── */
+nav{height:var(--nav-h);background:var(--espresso);display:flex;align-items:center;padding:0 28px;z-index:100;flex-shrink:0;}
+.nav-title{font-family:'League Spartan',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--cream);margin-right:36px;flex-shrink:0;}
+.nav-title span{color:var(--accent);}
+.nav-tabs{display:flex;gap:2px;}
+.nav-tab{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.45);padding:8px 18px;border-radius:4px;cursor:pointer;border:none;background:transparent;transition:all 0.15s;}
+.nav-tab:hover{color:var(--cream);background:rgba(255,255,255,0.07);}
+.nav-tab.active{color:var(--espresso);background:var(--cream);}
+.nav-right{margin-left:auto;}
+.add-btn{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--cream);background:var(--accent);border:none;padding:8px 18px;border-radius:4px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+.add-btn:hover{background:var(--accent-hover);}
+.add-btn::before{content:'+';font-size:16px;font-weight:300;line-height:1;}
+
+/* ── PAGES ── */
+.page{display:none;overflow:hidden;flex-direction:column;}
+.page.active{display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - var(--nav-h));}
+
+/* ── BOARD CONTROLS ── */
+.board-controls{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.filter-label{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-faint);margin-right:4px;}
+.filter-btn{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;padding:5px 14px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.filter-btn:hover{background:rgba(0,0,0,0.04);color:var(--text);}
+.filter-btn.active[data-cat="all"]{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
+.filter-btn.active[data-cat="Film"]{background:var(--cat-film);color:#fff;border-color:var(--cat-film);}
+.filter-btn.active[data-cat="TV"]{background:var(--cat-tv);color:#fff;border-color:var(--cat-tv);}
+.filter-btn.active[data-cat="Fiction"]{background:var(--cat-fiction);color:#fff;border-color:var(--cat-fiction);}
+.filter-btn.active[data-cat="Nonfiction"]{background:var(--cat-nonfiction);color:#fff;border-color:var(--cat-nonfiction);}
+.filter-btn.active[data-cat="Literature"]{background:var(--cat-lit);color:#fff;border-color:var(--cat-lit);}
+.stats-strip{margin-left:auto;display:flex;gap:14px;font-size:12px;color:var(--text-faint);}
+.stat-item{display:flex;align-items:center;gap:5px;}
+.stat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* ── BOARD ── */
+.board{display:grid;grid-template-columns:repeat(4,1fr);flex:1;min-height:0;overflow:hidden;}
+.column{display:flex;flex-direction:column;border-right:1px solid var(--border);min-height:0;overflow:hidden;}
+.column:last-child{border-right:none;}
+.col-header{padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--col-bg);}
+.col-title{font-family:'League Spartan',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);}
+.col-count{font-size:11px;color:var(--text-faint);background:rgba(61,53,48,0.08);padding:2px 8px;border-radius:10px;font-family:'League Spartan',sans-serif;font-weight:500;}
+.col-body{flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;align-items:stretch;gap:8px;background:var(--col-bg);}
+.col-body::-webkit-scrollbar{width:3px;}
+.col-body::-webkit-scrollbar-thumb{background:var(--mist);border-radius:2px;}
+.col-body.drag-over{outline:2px dashed var(--accent);outline-offset:-4px;border-radius:6px;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px 12px 17px;cursor:grab;box-shadow:var(--shadow);transition:box-shadow 0.15s,transform 0.15s,opacity 0.15s;user-select:none;position:relative;overflow:hidden;height:auto;min-height:0;flex-shrink:0;}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);transform:translateY(-1px);}
+.card:hover .card-actions{opacity:1;}
+.card.dragging{opacity:0.4;transform:rotate(1deg) scale(1.02);cursor:grabbing;}
+.card.hidden{display:none;}
+.card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity 0.15s;}
+.card-action-btn{width:24px;height:24px;border-radius:4px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-muted);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.12s;line-height:1;}
+.card-action-btn:hover{background:var(--espresso);color:var(--surface);border-color:var(--espresso);}
+.card-action-btn.delete:hover{background:#8B2020;border-color:#8B2020;color:#fff;}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px;}
+.card-title{font-family:'League Spartan',sans-serif;font-size:14px;font-weight:600;color:#374151;line-height:1.35;letter-spacing:-0.01em;}
+.cat-pill{font-family:'League Spartan',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.cat-Film{background:var(--cat-film-bg);color:var(--cat-film);}
+.cat-TV{background:var(--cat-tv-bg);color:var(--cat-tv);}
+.cat-Fiction{background:var(--cat-fiction-bg);color:var(--cat-fiction);}
+.cat-Nonfiction{background:var(--cat-nonfiction-bg);color:var(--cat-nonfiction);}
+.cat-Literature{background:var(--cat-lit-bg);color:var(--cat-lit);}
+.card-meta{font-size:12px;color:var(--text-faint);margin-bottom:5px;}
+.card-note{display:block;font-size:12px;color:var(--text-muted);line-height:1.5;font-style:italic;}
+.card-rating{margin-top:6px;}
+.card-thoughts{font-size:11px;color:var(--text-muted);font-style:italic;margin-top:5px;line-height:1.4;border-left:2px solid var(--border-strong);padding-left:8px;}
+.rating-badge{display:inline-flex;align-items:center;gap:3px;font-family:'League Spartan',sans-serif;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(139,111,71,0.12);color:var(--accent);}
+.format-badge{display:inline-flex;align-items:center;gap:3px;font-family:'League Spartan',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(61,53,48,0.07);color:var(--stone);margin-top:5px;}
+.drop-placeholder{height:56px;border:2px dashed var(--accent);border-radius:var(--radius);background:rgba(139,111,71,0.05);flex-shrink:0;}
+.card-move-btn{display:none;margin-top:10px;width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--border-strong);background:var(--cream);font-family:'League Spartan',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;text-align:center;}
+.card-move-btn:active{background:var(--border);}
+@media(max-width:800px){.card-move-btn{display:block;}}
+
+/* ── FINISHED COLUMN MONTH GROUPS ── */
+.finished-month-group{margin-bottom:6px;}
+.finished-month-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(61,53,48,0.12);cursor:pointer;user-select:none;margin-bottom:5px;transition:filter 0.15s;}
+.finished-month-header:hover{filter:brightness(0.92);}
+.finished-month-label{font-family:'League Spartan',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--espresso);opacity:0.75;}
+.finished-month-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--stone);font-family:'League Spartan',sans-serif;}
+.finished-month-arrow{font-size:11px;transition:transform 0.2s;display:inline-block;}
+.finished-month-arrow.closed{transform:rotate(-90deg);}
+.finished-month-cards{display:flex;flex-direction:column;gap:6px;}
+
+/* ── HISTORY PAGE ── */
+#page-history{overflow:hidden;flex-direction:column;}
+.history-controls{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;flex-shrink:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.history-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.history-body{flex:1;min-height:0;overflow-y:auto;padding:28px 32px;}
+.filter-btn.active[data-hcat="all"]{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
+.filter-btn.active[data-hcat="Film"]{background:var(--cat-film);color:#fff;border-color:var(--cat-film);}
+.filter-btn.active[data-hcat="TV"]{background:var(--cat-tv);color:#fff;border-color:var(--cat-tv);}
+.filter-btn.active[data-hcat="Fiction"]{background:var(--cat-fiction);color:#fff;border-color:var(--cat-fiction);}
+.filter-btn.active[data-hcat="Nonfiction"]{background:var(--cat-nonfiction);color:#fff;border-color:var(--cat-nonfiction);}
+.filter-btn.active[data-hcat="Literature"]{background:var(--cat-lit);color:#fff;border-color:var(--cat-lit);}
+.history-stats-row{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+.history-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;display:flex;flex-direction:column;gap:3px;min-width:100px;}
+.history-stat-label{font-family:'League Spartan',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);display:flex;align-items:center;gap:5px;}
+.history-stat-num{font-family:'League Spartan',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.history-stat-sub{font-size:11px;color:var(--text-faint);}
+.history-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:fit-content;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.top-rated-section{margin-bottom:32px;}
+.section-heading{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.section-heading::after{content:'';flex:1;height:1px;background:var(--border);}
+.top-rated-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.top-rated-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:box-shadow 0.15s;}
+.top-rated-card:hover{box-shadow:var(--shadow);}
+.top-rated-score{font-family:'League Spartan',sans-serif;font-size:18px;font-weight:700;color:var(--accent);line-height:1;flex-shrink:0;min-width:28px;}
+.top-rated-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.3;margin-bottom:2px;}
+.top-rated-meta{font-size:11px;color:var(--text-faint);}
+.year-section{margin-bottom:40px;}
+.year-label{font-family:'League Spartan',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-faint);margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.year-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.months-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.month-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.month-card-header{background:var(--espresso);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+.month-name{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream);}
+.month-count{font-size:10px;color:rgba(245,240,232,0.5);font-family:'League Spartan',sans-serif;}
+.month-items{padding:8px 10px;display:flex;flex-direction:column;gap:5px;}
+.month-item{display:flex;align-items:flex-start;gap:8px;padding:5px 6px;border-radius:6px;position:relative;}
+.month-item:hover{background:rgba(0,0,0,0.03);}
+.month-item:hover .month-item-edit{opacity:1;}
+.month-item-edit{position:absolute;right:4px;top:4px;width:22px;height:22px;border-radius:4px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-muted);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s;}
+.month-item-edit:hover{background:var(--espresso);color:var(--surface);}
+.month-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.month-item-text{font-size:12px;color:var(--text);line-height:1.35;}
+.month-item-meta{font-size:10px;color:var(--text-faint);margin-top:1px;}
+.history-empty{text-align:center;padding:60px 20px;color:var(--text-faint);}
+.history-empty h3{font-family:'League Spartan',sans-serif;font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text-muted);}
+
+/* ── STARS ── */
+.star{width:30px;height:30px;border-radius:4px;border:1.5px solid var(--border-strong);background:transparent;font-size:11px;font-family:'League Spartan',sans-serif;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.1s;display:flex;align-items:center;justify-content:center;}
+.star:hover,.star.lit{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ── MODALS ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,53,48,0.55);z-index:999;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius);width:460px;max-width:calc(100vw - 40px);box-shadow:var(--shadow-lg);overflow:hidden;max-height:90vh;overflow-y:auto;}
+.modal-header{background:var(--espresso);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;}
+.modal-title{font-family:'League Spartan',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream);}
+.modal-close{background:none;border:none;color:rgba(245,240,232,0.6);font-size:20px;cursor:pointer;line-height:1;padding:0 2px;}
+.modal-close:hover{color:var(--cream);}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-family:'League Spartan',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
+.form-input,.form-select,.form-textarea{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--cream);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:9px 12px;outline:none;transition:border-color 0.15s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:72px;line-height:1.5;}
+.cat-picker{display:flex;gap:6px;flex-wrap:wrap;}
+.cat-option{padding:8px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:transparent;font-family:'League Spartan',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;color:var(--text-muted);text-align:center;}
+.cat-option[data-val="Film"]:hover,.cat-option[data-val="Film"].selected{background:var(--cat-film-bg);border-color:var(--cat-film);color:var(--cat-film);}
+.cat-option[data-val="TV"]:hover,.cat-option[data-val="TV"].selected{background:var(--cat-tv-bg);border-color:var(--cat-tv);color:var(--cat-tv);}
+.cat-option[data-val="Fiction"]:hover,.cat-option[data-val="Fiction"].selected{background:var(--cat-fiction-bg);border-color:var(--cat-fiction);color:var(--cat-fiction);}
+.cat-option[data-val="Nonfiction"]:hover,.cat-option[data-val="Nonfiction"].selected{background:var(--cat-nonfiction-bg);border-color:var(--cat-nonfiction);color:var(--cat-nonfiction);}
+.cat-option[data-val="Literature"]:hover,.cat-option[data-val="Literature"].selected{background:var(--cat-lit-bg);border-color:var(--cat-lit);color:var(--cat-lit);}
+.format-picker{display:flex;gap:8px;}
+.format-option{flex:1;padding:9px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:transparent;font-family:'League Spartan',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;color:var(--text-muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;}
+.format-option:hover{border-color:var(--accent);color:var(--accent);}
+.format-option.selected{border-color:var(--accent);color:var(--accent);background:rgba(139,111,71,0.08);}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface);}
+.btn-cancel{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:9px 18px;border-radius:4px;border:1px solid var(--border-strong);background:transparent;color:var(--text-muted);cursor:pointer;}
+.btn-cancel:hover{background:rgba(0,0,0,0.04);}
+.btn-submit{font-family:'League Spartan',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:9px 20px;border-radius:4px;border:none;background:var(--accent);color:#fff;cursor:pointer;}
+.btn-submit:hover{background:var(--accent-hover);}
+.thoughts-prompt{font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:4px;line-height:1.5;}
+
+/* ── ACTION SHEET ── */
+.action-sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;align-items:flex-end;justify-content:center;}
+.action-sheet-overlay.open{display:flex;}
+.action-sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:8px 0 32px;box-shadow:var(--shadow-lg);}
+.action-sheet-title{font-family:'League Spartan',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);padding:12px 20px 8px;border-bottom:0.5px solid var(--border);margin-bottom:6px;}
+.action-sheet-item{display:flex;align-items:center;gap:14px;padding:14px 20px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;background:none;border:none;width:100%;text-align:left;cursor:pointer;}
+.action-sheet-item:active{background:var(--border);}
+.action-sheet-item .as-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-family:'League Spartan',sans-serif;font-weight:700;color:#fff;}
+.as-onlist{background:#7A6E65;}
+.as-upnext{background:#8B7355;}
+.as-current{background:#6B5C4A;}
+.as-finished{background:#3D3530;}
+.as-edit{background:var(--border);color:var(--espresso) !important;}
+.as-delete{background:#fff0f0;color:#8B2020 !important;}
+.action-sheet-cancel{margin:8px 16px 0;display:block;width:calc(100% - 32px);padding:14px;border-radius:12px;border:none;background:var(--border);font-family:'League Spartan',sans-serif;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:center;}
+
+@media(max-width:900px){
+  body{overflow:auto;}html,body{height:auto;min-height:100%;}
+  nav{padding:0 16px;height:auto;min-height:var(--nav-h);flex-wrap:wrap;padding-top:10px;padding-bottom:10px;}
+  .nav-title{font-size:15px;margin-right:0;}.nav-tab{padding:6px 12px;font-size:10px;}.add-btn{padding:7px 14px;font-size:10px;}
+  .page{display:none;height:auto;overflow:visible;min-height:0;}.page.active{display:block;overflow:visible;height:auto;}
+  .board-controls{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}.stats-strip{display:none;}
+  .board{display:block;height:auto;overflow:visible;}
+  .column{border-right:none;border-bottom:3px solid var(--border);overflow:visible;height:auto;}.column:last-child{border-bottom:none;}
+  .col-body{height:auto;max-height:none;overflow:visible;min-height:80px;padding:10px;}
+  .modal{width:calc(100vw - 24px);max-height:88vh;overflow-y:auto;}.modal-body{padding:14px;gap:12px;}.modal-footer{padding:12px 14px;position:static;}
+  #page-history{padding:16px;overflow:visible;height:auto;}.months-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-title">Martin's <span>List</span></span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="board">Board</button>
+    <button class="nav-tab" data-page="history">History</button>
+  </div>
+  <div class="nav-right"><button class="add-btn" id="openAdd">Add</button></div>
+</nav>
+
+<!-- BOARD PAGE -->
+<div class="page active" id="page-board">
+  <div class="board-controls">
+    <span class="filter-label">Filter</span>
+    <button class="filter-btn active" data-cat="all">All</button>
+    <button class="filter-btn" data-cat="Film">Film</button>
+    <button class="filter-btn" data-cat="TV">TV</button>
+    <button class="filter-btn" data-cat="Fiction">Fiction Books</button>
+    <button class="filter-btn" data-cat="Nonfiction">Non-fiction Books</button>
+    <button class="filter-btn" data-cat="Literature">Literature</button>
+    <div class="stats-strip" id="statsStrip"></div>
+  </div>
+  <div class="board">
+    <div class="column">
+      <div class="col-header" data-col="onlist"><span class="col-title" id="col-title-onlist">On The List</span><span class="col-count" id="count-onlist">0</span></div>
+      <div class="col-body" id="col-onlist" data-col="onlist"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="upnext"><span class="col-title" id="col-title-upnext">Up Next</span><span class="col-count" id="count-upnext">0</span></div>
+      <div class="col-body" id="col-upnext" data-col="upnext"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="current"><span class="col-title" id="col-title-current">Current</span><span class="col-count" id="count-current">0</span></div>
+      <div class="col-body" id="col-current" data-col="current"></div>
+    </div>
+    <div class="column">
+      <div class="col-header" data-col="finished"><span class="col-title" id="col-title-finished">Finished</span><span class="col-count" id="count-finished">0</span></div>
+      <div class="col-body" id="col-finished" data-col="finished"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div class="history-controls">
+    <div class="history-filters">
+      <span class="filter-label">Filter</span>
+      <button class="filter-btn active" data-hcat="all">All</button>
+      <button class="filter-btn" data-hcat="Film">Film</button>
+      <button class="filter-btn" data-hcat="TV">TV</button>
+      <button class="filter-btn" data-hcat="Fiction">Fiction</button>
+      <button class="filter-btn" data-hcat="Nonfiction">Non-fiction</button>
+      <button class="filter-btn" data-hcat="Literature">Literature</button>
+    </div>
+  </div>
+  <div class="history-body">
+    <div id="historyStats"></div>
+    <div id="historyTopRated"></div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<!-- RATING MODAL -->
+<div class="modal-overlay" id="ratingOverlay">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Log it</span><button class="modal-close" id="closeRating">&times;</button></div>
+    <div class="modal-body">
+      <div id="ratingItemTitle" style="font-family:'League Spartan',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
+      <div id="ratingItemMeta" style="font-size:12px;color:var(--text-faint);margin-bottom:20px;"></div>
+      <div class="form-group">
+        <label class="form-label">When did you finish it?</label>
+        <div style="display:flex;gap:8px;">
+          <select class="form-select" id="ratingMonth" style="flex:2;">
+            <option value="">Month</option>
+            <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+            <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+            <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+          </select>
+          <select class="form-select" id="ratingYear" style="flex:1;"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your rating</label>
+        <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;" id="starRow"></div>
+        <div style="font-size:13px;color:var(--text-muted);" id="ratingReadout">Not rated</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your thoughts</label>
+        <p class="thoughts-prompt" id="thoughtsPrompt"></p>
+        <textarea class="form-textarea" id="thoughtsInput" placeholder="Write whatever comes to mind…" style="min-height:90px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" id="skipRating">Skip</button><button class="btn-submit" id="submitRating">Save</button></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Edit</span><button class="modal-close" id="closeEdit">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="editTitle"></div>
+      <div class="form-group"><label class="form-label">Creator / Year</label><input type="text" class="form-input" id="editMeta"></div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-picker" id="editCatPicker">
+          <button class="cat-option" data-val="Film">Film</button>
+          <button class="cat-option" data-val="TV">TV</button>
+          <button class="cat-option" data-val="Fiction">Fiction Books</button>
+          <button class="cat-option" data-val="Nonfiction">Non-fiction</button>
+          <button class="cat-option" data-val="Literature">Literature</button>
+        </div>
+      </div>
+      <div class="form-group" id="editFormatGroup" style="display:none;">
+        <label class="form-label">Format</label>
+        <div class="format-picker" id="editFormatPicker">
+          <button class="format-option selected" data-val="Print">📖 Print</button>
+          <button class="format-option" data-val="Audio">🎧 Audiobook</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Note</label><textarea class="form-textarea" id="editNote"></textarea></div>
+      <div class="form-group"><label class="form-label">Thoughts</label><textarea class="form-textarea" id="editThoughts" style="min-height:80px;"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" id="cancelEdit">Cancel</button><button class="btn-submit" id="submitEdit">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- ACTION SHEET -->
+<div class="action-sheet-overlay" id="actionSheetOverlay">
+  <div class="action-sheet">
+    <div class="action-sheet-title" id="actionSheetTitle">Move to…</div>
+    <button class="action-sheet-item" id="as-onlist"><span class="as-icon as-onlist">①</span> On The List</button>
+    <button class="action-sheet-item" id="as-upnext"><span class="as-icon as-upnext">②</span> Up Next</button>
+    <button class="action-sheet-item" id="as-current"><span class="as-icon as-current">③</span> Current</button>
+    <button class="action-sheet-item" id="as-finished"><span class="as-icon as-finished">✓</span> Finished</button>
+    <button class="action-sheet-item" id="as-edit"><span class="as-icon as-edit">✎</span> Edit</button>
+    <button class="action-sheet-item" id="as-delete"><span class="as-icon as-delete">✕</span> Delete</button>
+    <button class="action-sheet-cancel" id="as-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add to List</span><button class="modal-close" id="closeModal">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="inputTitle" placeholder="e.g. Middlemarch, The Zone of Interest…"></div>
+      <div class="form-group"><label class="form-label">Creator / Year</label><input type="text" class="form-input" id="inputMeta" placeholder="e.g. George Eliot · 1871"></div>
+      <div class="form-group"><label class="form-label">Season / Streamer <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label><input type="text" class="form-input" id="inputStreamer" placeholder="e.g. Season 2 · Netflix"></div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-picker">
+          <button class="cat-option selected" data-val="Film">Film</button>
+          <button class="cat-option" data-val="TV">TV</button>
+          <button class="cat-option" data-val="Fiction">Fiction Books</button>
+          <button class="cat-option" data-val="Nonfiction">Non-fiction</button>
+          <button class="cat-option" data-val="Literature">Literature</button>
+        </div>
+      </div>
+      <div class="form-group" id="addFormatGroup" style="display:none;">
+        <label class="form-label">Format</label>
+        <div class="format-picker" id="addFormatPicker">
+          <button class="format-option selected" data-val="Print">📖 Print</button>
+          <button class="format-option" data-val="Audio">🎧 Audiobook</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Note <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label><textarea class="form-textarea" id="inputNote" placeholder="Why it's on the list…"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" id="cancelModal">Cancel</button><button class="btn-submit" id="submitAdd">Add to List</button></div>
+  </div>
+</div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const BOOK_CATS = ['Fiction','Nonfiction','Literature'];
+const COLS = ['onlist','upnext','current','finished'];
+
+const SUPABASE_URL='https://qotnhrwksvilzmfqleat.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvdG5ocndrc3ZpbHptZnFsZWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MDg0NTYsImV4cCI6MjA4OTQ4NDQ1Nn0.sZL-yI9HgqIcVHqCLwu8T23yLAFwVcw7w7CEBbyyl-Q';
+const TABLE='martins_list';
+
+// Column labels per active filter
+const COL_LABELS = {
+  Film:       ['On The List','Up Next','Watching','Finished'],
+  TV:         ['On The List','Up Next','Watching','Finished'],
+  Fiction:    ['On The List','Up Next','Reading', 'Finished'],
+  Nonfiction: ['On The List','Up Next','Reading', 'Finished'],
+  Literature: ['On The List','Up Next','Reading', 'Finished'],
+  all:        ['On The List','Up Next','Current', 'Finished'],
+};
+
+const db={
+  async get(){const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?select=*`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});if(!r.ok)throw new Error(await r.text());return r.json();},
+  async upsert(row){const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify(row)});if(!r.ok)throw new Error(await r.text());}
+};
+
+let data={},activeFilter='all',dragItem=null,placeholder=null,newCat='Film',newFormat='Print';
+function allItems(){return Object.values(data);}
+function visibleItems(){return activeFilter==='all'?allItems():allItems().filter(i=>i.cat===activeFilter);}
+
+function showLoading(msg){let el=document.getElementById('loadingOverlay');if(!el){el=document.createElement('div');el.id='loadingOverlay';el.style.cssText='position:fixed;inset:0;background:rgba(245,240,232,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:League Spartan,sans-serif;';el.innerHTML=`<div style="font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#6B5E54;" id="loadingMsg"></div><div style="margin-top:12px;width:40px;height:2px;background:#8B6F47;animation:lb 1s ease-in-out infinite alternate;"></div><style>@keyframes lb{from{transform:scaleX(0.2)}to{transform:scaleX(1)}}</style>`;document.body.appendChild(el);}document.getElementById('loadingMsg').textContent=msg;el.style.display='flex';}
+function hideLoading(){const el=document.getElementById('loadingOverlay');if(el)el.style.display='none';}
+function showError(msg){let el=document.getElementById('errorBanner');if(!el){el=document.createElement('div');el.id='errorBanner';el.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#3D3530;color:#F5F0E8;padding:10px 20px;border-radius:6px;font-size:12px;z-index:9999;';document.body.appendChild(el);}el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},4000);}
+
+async function loadData(){showLoading('Loading…');try{const rows=await db.get();data={};rows.forEach(r=>{data[r.id]={id:r.id,col:r.col,cat:r.cat,title:r.title,meta:r.meta||'',note:r.note||'',format:r.format||null,rating:r.rating||null,thoughts:r.thoughts||'',custom:r.custom||false,doneAt:r.done_at||null};});}catch(e){showError('Could not connect.');}hideLoading();}
+
+async function saveItem(id){const item=data[id];if(!item)return;try{await db.upsert({id:item.id,col:item.col,cat:item.cat,title:item.title,meta:item.meta||'',note:item.note||'',format:item.format||null,rating:item.rating||null,thoughts:item.thoughts||'',custom:item.custom||false,done_at:item.doneAt||null});}catch(e){showError('Could not save.');}}
+
+function catColour(cat){const map={Film:'#5C4A3A',TV:'#4A5C6B',Fiction:'#6B5C3A',Nonfiction:'#3A5C4A',Literature:'#6B4A5C'};return map[cat]||'#9E8E82';}
+
+// ── RENDER BOARD ──
+function renderBoard(){
+  const labels = COL_LABELS[activeFilter] || COL_LABELS.all;
+  document.getElementById('col-title-onlist').textContent = labels[0];
+  document.getElementById('col-title-upnext').textContent = labels[1];
+  document.getElementById('col-title-current').textContent = labels[2];
+  document.getElementById('col-title-finished').textContent = labels[3];
+
+  const vis = visibleItems();
+
+  // On The List, Up Next, Current — flat lists
+  ['onlist','upnext','current'].forEach(col => {
+    const el = document.getElementById('col-'+col);
+    el.innerHTML = '';
+    vis.filter(i=>i.col===col).forEach(item=>el.appendChild(makeCard(item)));
+  });
+
+  // Finished — grouped by month
+  const finishedEl = document.getElementById('col-finished');
+  finishedEl.innerHTML = '';
+  const finishedVis = vis.filter(i=>i.col==='finished');
+  if(finishedVis.length>0){
+    const groups={};
+    finishedVis.forEach(item=>{const d=item.doneAt?new Date(item.doneAt):new Date();const key=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;if(!groups[key])groups[key]={label:`${MONTHS[d.getMonth()]} ${d.getFullYear()}`,items:[]};groups[key].items.push(item);});
+    Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(key=>{
+      const group=groups[key];
+      const groupEl=document.createElement('div');groupEl.className='finished-month-group';
+      const header=document.createElement('div');header.className='finished-month-header';
+      header.innerHTML=`<span class="finished-month-label">${group.label}</span><span class="finished-month-meta"><span>${group.items.length} item${group.items.length!==1?'s':''}</span><span class="finished-month-arrow">▾</span></span>`;
+      const cardsEl=document.createElement('div');cardsEl.className='finished-month-cards';
+      group.items.forEach(item=>cardsEl.appendChild(makeCard(item)));
+      header.addEventListener('click',()=>{const open=cardsEl.style.display!=='none';cardsEl.style.display=open?'none':'flex';header.querySelector('.finished-month-arrow').classList.toggle('closed',open);});
+      groupEl.appendChild(header);groupEl.appendChild(cardsEl);finishedEl.appendChild(groupEl);
+    });
+  }
+  updateCounts();updateStats();
+}
+
+function makeCard(item){
+  const div=document.createElement('div');
+  div.className='card';div.dataset.id=item.id;div.dataset.cat=item.cat;div.draggable=true;
+  const borderColors={Film:'#5C4A3A',TV:'#4A5C6B',Fiction:'#6B5C3A',Nonfiction:'#3A5C4A',Literature:'#6B4A5C'};
+  div.style.borderLeftColor=borderColors[item.cat]||'#9E8E82';
+  div.style.borderLeftWidth='4px';
+  const formatBadge=item.format&&BOOK_CATS.includes(item.cat)?`<div class="format-badge">${item.format==='Audio'?'🎧 Audiobook':'📖 Print'}</div>`:'';
+  div.innerHTML=`<div class="card-actions"><button class="card-action-btn edit" title="Edit">✎</button><button class="card-action-btn delete" title="Delete">✕</button></div><div class="card-top"><span class="card-title">${esc(item.title)}</span><span class="cat-pill cat-${item.cat}">${item.cat}</span></div><div class="card-meta">${esc(item.meta||'')}</div>${item.note?`<div class="card-note">${esc(item.note)}</div>`:''}${formatBadge}${item.rating?`<div class="card-rating"><div class="rating-badge">★ ${item.rating}/10</div></div>`:''}${item.thoughts?`<div class="card-thoughts">${esc(item.thoughts)}</div>`:''}<button class="card-move-btn">Move ›</button>`;
+  div.querySelector('.edit').addEventListener('click',e=>{e.stopPropagation();openEditModal(item.id);});
+  div.querySelector('.delete').addEventListener('click',e=>{e.stopPropagation();confirmDelete(item.id);});
+  div.querySelector('.card-move-btn').addEventListener('click',e=>{e.stopPropagation();openActionSheet(item.id);});
+  div.addEventListener('dragstart',onDragStart);div.addEventListener('dragend',onDragEnd);
+  div.addEventListener('click',e=>{if(window.innerWidth<=900&&!e.target.closest('.card-action-btn')&&!e.target.closest('.card-move-btn'))openActionSheet(item.id);});
+  return div;
+}
+
+function updateCounts(){COLS.forEach(col=>{const count=visibleItems().filter(i=>i.col===col).length;document.getElementById('count-'+col).textContent=count;});}
+
+function updateStats(){
+  const finished=visibleItems().filter(i=>i.col==='finished');
+  const total=visibleItems().length;
+  const cats=['Film','TV','Fiction','Nonfiction','Literature'];
+  document.getElementById('statsStrip').innerHTML=cats.map(cat=>{const n=finished.filter(i=>i.cat===cat).length;if(n===0)return'';return`<span class="stat-item"><span class="stat-dot" style="background:${catColour(cat)}"></span>${n} ${cat.toLowerCase()}</span>`;}).join('')+`<span class="stat-item" style="color:var(--text-faint)">${finished.length}/${total} done</span>`;
+}
+
+// ── DRAG ──
+function onDragStart(e){dragItem=e.currentTarget;dragItem.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragItem.dataset.id);placeholder=document.createElement('div');placeholder.className='drop-placeholder';}
+function onDragEnd(){if(dragItem)dragItem.classList.remove('dragging');if(placeholder&&placeholder.parentNode)placeholder.parentNode.removeChild(placeholder);document.querySelectorAll('.col-body').forEach(c=>c.classList.remove('drag-over'));dragItem=null;placeholder=null;}
+
+function setupColumns(){
+  document.querySelectorAll('.col-body').forEach(col=>{
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over');const after=getDragAfter(col,e.clientY);if(placeholder){after==null?col.appendChild(placeholder):col.insertBefore(placeholder,after);}});
+    col.addEventListener('dragleave',e=>{if(!col.contains(e.relatedTarget)){col.classList.remove('drag-over');if(placeholder&&placeholder.parentNode===col)col.removeChild(placeholder);}});
+    col.addEventListener('drop',async e=>{
+      e.preventDefault();col.classList.remove('drag-over');
+      if(placeholder&&placeholder.parentNode)placeholder.parentNode.removeChild(placeholder);
+      const id=e.dataTransfer.getData('text/plain');const newCol=col.dataset.col;
+      if(id&&newCol&&data[id]){
+        const wasFinished=data[id].col==='finished';data[id].col=newCol;
+        if(newCol==='finished'&&!wasFinished){data[id].doneAt=new Date().toISOString();renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();openRatingModal(id);await saveItem(id);}
+        else{if(newCol!=='finished')data[id].doneAt=null;renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();await saveItem(id);}
+      }
+    });
+  });
+}
+
+function getDragAfter(container,y){const els=[...container.querySelectorAll('.card:not(.dragging)')];return els.reduce((closest,child)=>{const box=child.getBoundingClientRect();const offset=y-box.top-box.height/2;if(offset<0&&offset>closest.offset)return{offset,element:child};return closest;},{offset:Number.NEGATIVE_INFINITY}).element;}
+
+// ── FILTERS ──
+document.querySelectorAll('.filter-btn[data-cat]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn[data-cat]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.cat;renderBoard();});});
+
+// ── NAV TABS ──
+document.querySelectorAll('.nav-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));tab.classList.add('active');document.getElementById('page-'+tab.dataset.page).classList.add('active');if(tab.dataset.page==='history')renderHistory();});});
+
+// ── HISTORY ──
+let historyFilter='all';
+function renderHistory(){
+  const allFinished=allItems().filter(i=>i.col==='finished'&&i.doneAt);
+  const finished=historyFilter==='all'?allFinished:allFinished.filter(i=>i.cat===historyFilter);
+  const statsEl=document.getElementById('historyStats');
+  const cats=['Film','TV','Fiction','Nonfiction','Literature'];
+  const yearNow=new Date().getFullYear();
+  const thisYear=allFinished.filter(i=>new Date(i.doneAt).getFullYear()===yearNow);
+  let statsHtml=`<div class="history-stats-row"><div class="history-stat-card"><div class="history-stat-label">Total ${yearNow}</div><div class="history-stat-num">${thisYear.length}</div><div class="history-stat-sub">finished</div></div>`;
+  cats.forEach(cat=>{const n=thisYear.filter(i=>i.cat===cat).length;if(n===0)return;statsHtml+=`<div class="history-stat-card"><div class="history-stat-label"><span style="width:7px;height:7px;border-radius:50%;background:${catColour(cat)};display:inline-block;flex-shrink:0;"></span>${cat}</div><div class="history-stat-num">${n}</div><div class="history-stat-sub">this year</div></div>`;});
+  statsHtml+=`</div>`;
+  const activeCats=[...new Set(allFinished.map(i=>i.cat))];
+  statsHtml+=`<div class="history-legend">`+activeCats.map(cat=>`<div class="legend-item"><span class="legend-dot" style="background:${catColour(cat)}"></span>${cat}</div>`).join('')+`</div>`;
+  statsEl.innerHTML=statsHtml;
+
+  const topEl=document.getElementById('historyTopRated');
+  if(historyFilter==='all'){
+    const ri=allFinished.filter(i=>i.rating);
+    let topHtml='';
+    if(ri.length>0){topHtml=`<div class="top-rated-section"><div class="section-heading">Top Rated</div><div class="top-rated-grid">`;cats.forEach(cat=>{const cr=ri.filter(i=>i.cat===cat).sort((a,b)=>b.rating-a.rating);if(!cr.length)return;const top=cr[0];topHtml+=`<div class="top-rated-card" onclick="openEditModal('${top.id}')"><div class="top-rated-score">${top.rating}</div><div><div class="top-rated-title">${esc(top.title)}</div><div class="top-rated-meta">${cat}${top.meta?' · '+esc(top.meta):''}</div></div></div>`;});topHtml+=`</div></div>`;}
+    topEl.innerHTML=topHtml;
+  }else{topEl.innerHTML='';}
+
+  const container=document.getElementById('historyContent');
+  if(finished.length===0){container.innerHTML=`<div class="history-empty"><h3>Nothing here yet</h3><p>Move items to Finished and they'll appear here.</p></div>`;return;}
+  const grouped={};finished.forEach(item=>{const d=new Date(item.doneAt);const key=`${d.getFullYear()}-${d.getMonth()}`;if(!grouped[key])grouped[key]={year:d.getFullYear(),month:d.getMonth(),items:[]};grouped[key].items.push(item);});
+  const sorted=Object.values(grouped).sort((a,b)=>b.year-a.year||b.month-a.month);
+  const byYear={};sorted.forEach(g=>{if(!byYear[g.year])byYear[g.year]=[];byYear[g.year].push(g);});
+  let html='';Object.keys(byYear).sort((a,b)=>b-a).forEach(year=>{html+=`<div class="year-section"><div class="year-label">${year}</div><div class="months-grid">`;byYear[year].forEach(group=>{html+=`<div class="month-card"><div class="month-card-header"><span class="month-name">${MONTHS[group.month]}</span><span class="month-count">${group.items.length} item${group.items.length!==1?'s':''}</span></div><div class="month-items">`;html+=group.items.map(item=>`<div class="month-item"><button class="month-item-edit" onclick="openEditModal('${item.id}')" title="Edit">✎</button><div class="month-item-dot" style="background:${catColour(item.cat)}"></div><div><div class="month-item-text">${esc(item.title)}</div><div class="month-item-meta">${item.cat}${item.meta?' · '+esc(item.meta):''}${item.rating?' · ★ '+item.rating+'/10':''}${item.format&&BOOK_CATS.includes(item.cat)?' · '+(item.format==='Audio'?'🎧':'📖'):''}</div>${item.thoughts?`<div style="font-size:11px;color:var(--text-muted);font-style:italic;margin-top:3px;line-height:1.4;">"${esc(item.thoughts)}"</div>`:''}</div></div>`).join('');html+=`</div></div>`;});html+=`</div></div>`;});
+  container.innerHTML=html;
+}
+
+document.querySelectorAll('[data-hcat]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-hcat]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');historyFilter=btn.dataset.hcat;renderHistory();});});
+
+// ── FORMAT PICKER HELPERS ──
+const BOOK_CAT_SET=new Set(BOOK_CATS);
+function updateFormatVisibility(cat,groupId,pickerId){const grp=document.getElementById(groupId);if(grp)grp.style.display=BOOK_CAT_SET.has(cat)?'flex':'none';}
+
+// ── ADD MODAL ──
+const modalOverlay=document.getElementById('modalOverlay');
+document.getElementById('openAdd').addEventListener('click',()=>{if(activeFilter!=='all'){newCat=activeFilter;document.querySelectorAll('#modalOverlay .cat-option').forEach(b=>b.classList.toggle('selected',b.dataset.val===newCat));updateFormatVisibility(newCat,'addFormatGroup','addFormatPicker');}modalOverlay.classList.add('open');document.getElementById('inputTitle').focus();});
+document.getElementById('closeModal').addEventListener('click',closeModal);
+document.getElementById('cancelModal').addEventListener('click',closeModal);
+modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal();});
+function closeModal(){modalOverlay.classList.remove('open');document.getElementById('inputTitle').value='';document.getElementById('inputMeta').value='';document.getElementById('inputStreamer').value='';document.getElementById('inputNote').value='';newFormat='Print';document.querySelectorAll('#addFormatPicker .format-option').forEach(b=>b.classList.toggle('selected',b.dataset.val==='Print'));}
+
+document.querySelectorAll('#modalOverlay .cat-option').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('#modalOverlay .cat-option').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');newCat=btn.dataset.val;updateFormatVisibility(newCat,'addFormatGroup','addFormatPicker');});});
+document.querySelectorAll('#addFormatPicker .format-option').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('#addFormatPicker .format-option').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');newFormat=btn.dataset.val;});});
+
+document.getElementById('submitAdd').addEventListener('click',async()=>{
+  const title=document.getElementById('inputTitle').value.trim();if(!title){document.getElementById('inputTitle').focus();return;}
+  const id='m_'+Date.now();
+  const meta=[document.getElementById('inputMeta').value.trim(),document.getElementById('inputStreamer').value.trim()].filter(Boolean).join(' · ');
+  const format=BOOK_CAT_SET.has(newCat)?newFormat:null;
+  data[id]={id,col:'onlist',doneAt:null,custom:true,cat:newCat,title,meta,note:document.getElementById('inputNote').value.trim(),format,rating:null,thoughts:''};
+  renderBoard();closeModal();await saveItem(id);
+});
+
+// ── RATING MODAL ──
+const THOUGHTS_PROMPTS=['What stayed with you after you finished?','Would you recommend it, and to whom?','What surprised you most?','How did it make you feel?','What was the best thing about it?','Did it meet your expectations?','What would you change about it?','One word to describe it?','Who else needs to experience this?','What did it remind you of?'];
+let pendingRatingId=null,currentRating=0;
+(function(){const sel=document.getElementById('ratingYear');const ty=new Date().getFullYear();for(let y=ty;y>=ty-10;y--){const opt=document.createElement('option');opt.value=y;opt.textContent=y;sel.appendChild(opt);}})();
+function openRatingModal(id){pendingRatingId=id;currentRating=data[id].rating||0;const item=data[id];document.getElementById('ratingItemTitle').textContent=item.title;document.getElementById('ratingItemMeta').textContent=item.meta||'';document.getElementById('thoughtsInput').value=item.thoughts||'';document.getElementById('thoughtsPrompt').textContent=THOUGHTS_PROMPTS[Math.floor(Math.random()*THOUGHTS_PROMPTS.length)];const d=item.doneAt?new Date(item.doneAt):new Date();document.getElementById('ratingMonth').value=d.getMonth();document.getElementById('ratingYear').value=d.getFullYear();buildStars();document.getElementById('ratingOverlay').classList.add('open');}
+function buildStars(){const row=document.getElementById('starRow');row.innerHTML='';for(let i=1;i<=10;i++){const btn=document.createElement('button');btn.className='star'+(i<=currentRating?' lit':'');btn.textContent=i;btn.addEventListener('mouseenter',()=>highlightStars(i));btn.addEventListener('mouseleave',()=>highlightStars(currentRating));btn.addEventListener('click',()=>{currentRating=i;highlightStars(i);updateReadout();});row.appendChild(btn);}updateReadout();}
+function highlightStars(n){document.querySelectorAll('#starRow .star').forEach((s,i)=>s.classList.toggle('lit',i<n));}
+function updateReadout(){const labels=['','Terrible','Poor','Disappointing','Mediocre','Average','Decent','Good','Great','Excellent','Perfect'];document.getElementById('ratingReadout').textContent=currentRating>0?`${currentRating}/10 — ${labels[currentRating]}`:'Not rated';}
+function closeRatingModal(){document.getElementById('ratingOverlay').classList.remove('open');pendingRatingId=null;currentRating=0;}
+document.getElementById('closeRating').addEventListener('click',closeRatingModal);
+document.getElementById('skipRating').addEventListener('click',closeRatingModal);
+document.getElementById('ratingOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('ratingOverlay'))closeRatingModal();});
+document.getElementById('submitRating').addEventListener('click',async()=>{if(pendingRatingId){const month=document.getElementById('ratingMonth').value;const year=document.getElementById('ratingYear').value;if(month!==''&&year)data[pendingRatingId].doneAt=new Date(Date.UTC(parseInt(year),parseInt(month),1,12)).toISOString();if(currentRating>0)data[pendingRatingId].rating=currentRating;const thoughts=document.getElementById('thoughtsInput').value.trim();if(thoughts)data[pendingRatingId].thoughts=thoughts;renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();await saveItem(pendingRatingId);}closeRatingModal();});
+
+// ── EDIT MODAL ──
+let editingId=null,editCat='Film',editFormat='Print';
+function openEditModal(id){
+  editingId=id;const item=data[id];
+  document.getElementById('editTitle').value=item.title;
+  document.getElementById('editMeta').value=item.meta||'';
+  document.getElementById('editNote').value=item.note||'';
+  document.getElementById('editThoughts').value=item.thoughts||'';
+  editCat=item.cat;editFormat=item.format||'Print';
+  document.querySelectorAll('#editCatPicker .cat-option').forEach(b=>b.classList.toggle('selected',b.dataset.val===editCat));
+  updateFormatVisibility(editCat,'editFormatGroup','editFormatPicker');
+  document.querySelectorAll('#editFormatPicker .format-option').forEach(b=>b.classList.toggle('selected',b.dataset.val===editFormat));
+  document.getElementById('editOverlay').classList.add('open');
+}
+function closeEditModal(){document.getElementById('editOverlay').classList.remove('open');editingId=null;}
+document.getElementById('closeEdit').addEventListener('click',closeEditModal);
+document.getElementById('cancelEdit').addEventListener('click',closeEditModal);
+document.getElementById('editOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('editOverlay'))closeEditModal();});
+document.querySelectorAll('#editCatPicker .cat-option').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('#editCatPicker .cat-option').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');editCat=btn.dataset.val;updateFormatVisibility(editCat,'editFormatGroup','editFormatPicker');});});
+document.querySelectorAll('#editFormatPicker .format-option').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('#editFormatPicker .format-option').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');editFormat=btn.dataset.val;});});
+document.getElementById('submitEdit').addEventListener('click',async()=>{if(!editingId)return;const title=document.getElementById('editTitle').value.trim();if(!title){document.getElementById('editTitle').focus();return;}data[editingId].title=title;data[editingId].meta=document.getElementById('editMeta').value.trim();data[editingId].note=document.getElementById('editNote').value.trim();data[editingId].thoughts=document.getElementById('editThoughts').value.trim();data[editingId].cat=editCat;data[editingId].format=BOOK_CAT_SET.has(editCat)?editFormat:null;renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();await saveItem(editingId);closeEditModal();});
+
+// ── DELETE ──
+async function confirmDelete(id){if(!confirm(`Delete "${data[id].title}"? This cannot be undone.`))return;delete data[id];renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();try{const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:'return=minimal'}});if(!res.ok)showError('Could not delete.');}catch(e){showError('Could not delete.');}}
+
+// ── ACTION SHEET ──
+let actionSheetId=null;
+function openActionSheet(id){actionSheetId=id;document.getElementById('actionSheetTitle').textContent=data[id].title;COLS.forEach(col=>{const btn=document.getElementById('as-'+col);if(btn)btn.style.display=data[id].col===col?'none':'flex';});document.getElementById('actionSheetOverlay').classList.add('open');}
+function closeActionSheet(){document.getElementById('actionSheetOverlay').classList.remove('open');actionSheetId=null;}
+async function moveCardTo(col){if(!actionSheetId)return;const id=actionSheetId;closeActionSheet();const wasFinished=data[id].col==='finished';data[id].col=col;if(col==='finished'&&!wasFinished){data[id].doneAt=new Date().toISOString();renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();openRatingModal(id);await saveItem(id);}else{if(col!=='finished')data[id].doneAt=null;renderBoard();if(document.getElementById('page-history').classList.contains('active'))renderHistory();await saveItem(id);}}
+COLS.forEach(col=>{const btn=document.getElementById('as-'+col);if(btn)btn.addEventListener('click',()=>moveCardTo(col));});
+document.getElementById('as-edit').addEventListener('click',()=>{const id=actionSheetId;closeActionSheet();openEditModal(id);});
+document.getElementById('as-delete').addEventListener('click',()=>{const id=actionSheetId;closeActionSheet();confirmDelete(id);});
+document.getElementById('as-cancel').addEventListener('click',closeActionSheet);
+document.getElementById('actionSheetOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('actionSheetOverlay'))closeActionSheet();});
+
+function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+(async()=>{await loadData();renderBoard();setupColumns();})();
+</script>
+</body>
+</html>
